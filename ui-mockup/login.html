@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot Gate - เข้าสู่ระบบ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Google Cloud Light Mode Theme (Login default) */
+            --bg-dark: #f8f9fa;
+            --bg-panel: #ffffff;
+            --border-color: #dadce0;
+            --primary: #1a73e8;
+            --primary-hover: #1557b0;
+            --text-main: #202124;
+            --text-muted: #5f6368;
+            --error: #d93025;
+            --error-bg: #fce8e6;
+            --error-border: #fad2cf;
+            --font-family: 'Roboto', 'Prompt', sans-serif;
+        }
+
+        [data-theme="dark"] {
+            /* Google Cloud Dark Mode Theme */
+            --bg-dark: #202124;
+            --bg-panel: #2d2f31;
+            --border-color: #3c4043;
+            --primary: #8ab4f8;
+            --primary-hover: #aecbfa;
+            --text-main: #e8eaed;
+            --text-muted: #9aa0a6;
+            --error: #f28b82;
+            --error-bg: rgba(242, 139, 130, 0.1);
+            --error-border: rgba(242, 139, 130, 0.2);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            position: relative;
+        }
+
+        .login-card {
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 2.5rem;
+            width: 420px;
+            max-width: 90%;
+            box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        [data-theme="dark"] .login-card {
+            box-shadow: 0 1px 2px 0 rgba(0,0,0,0.3), 0 1px 3px 1px rgba(0,0,0,0.15);
+        }
+
+        .login-header {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .login-logo {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #4285f4, #34a853);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #fff;
+            font-size: 1.6rem;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            margin-bottom: 0.5rem;
+        }
+
+        .login-header h1 {
+            font-size: 1.5rem;
+            font-weight: 400;
+            letter-spacing: -0.5px;
+        }
+
+        .login-header p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-main);
+            font-family: 'Prompt', sans-serif;
+        }
+
+        .form-input {
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 0.75rem 1rem;
+            color: var(--text-main);
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 1px var(--primary);
+        }
+
+        .btn-login {
+            background-color: var(--primary);
+            color: #ffffff;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            padding: 0.75rem 1.5rem;
+            font-size: 0.95rem;
+            font-weight: 500;
+            font-family: 'Prompt', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+        [data-theme="dark"] .btn-login {
+            color: #202124;
+        }
+
+        .btn-login:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .alert-error {
+            background-color: var(--error-bg);
+            border: 1px solid var(--error-border);
+            color: var(--error);
+            padding: 0.75rem 1rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            display: none;
+            font-family: 'Prompt', sans-serif;
+        }
+
+        .quick-login-section {
+            border-top: 1px solid var(--border-color);
+            padding-top: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .quick-login-title {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            font-weight: 600;
+            font-family: 'Prompt', sans-serif;
+        }
+
+        .quick-login-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+        }
+
+        .btn-quick {
+            background: none;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 0.5rem;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Prompt', sans-serif;
+            text-align: center;
+        }
+
+        .btn-quick:hover {
+            color: var(--text-main);
+            border-color: var(--border-hover);
+            background-color: rgba(0, 0, 0, 0.03);
+        }
+        [data-theme="dark"] .btn-quick:hover {
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+
+        .theme-toggle-container {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+        }
+
+        .theme-toggle-btn {
+            background: none;
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .theme-toggle-btn:hover {
+            color: var(--text-main);
+            background-color: rgba(0,0,0,0.04);
+        }
+        [data-theme="dark"] .theme-toggle-btn:hover {
+            background-color: rgba(255, 255, 255, 0.04);
+        }
+    </style>
+</head>
+<body>
+    <div class="theme-toggle-container">
+        <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับโหมดสว่าง/มืด">
+            <svg class="sun-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+            <svg class="moon-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        </button>
+    </div>
+
+    <div class="login-card">
+        <div class="login-header">
+            <div class="login-logo">G</div>
+            <h1>เข้าสู่ระบบ</h1>
+            <p>เพื่อเปิดใช้งานคอนโซล Chatbot Gate</p>
+        </div>
+
+        <div class="alert-error" id="error-alert">
+            ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง!
+        </div>
+
+        <form id="login-form" onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <label for="username">ชื่อผู้ใช้ (Username)</label>
+                <input type="text" id="username" class="form-input" required autocomplete="username" placeholder="เช่น noc01, admin">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label for="password">รหัสผ่าน (Password)</label>
+                <input type="password" id="password" class="form-input" required autocomplete="current-password" placeholder="••••••••">
+            </div>
+
+            <button type="submit" class="btn-login">ลงชื่อเข้าใช้งาน</button>
+        </form>
+
+        <div class="quick-login-section">
+            <span class="quick-login-title">บัญชีจำลอง (Quick Login)</span>
+            <div class="quick-login-grid">
+                <button class="btn-quick" onclick="fillQuickLogin('noc01', 'noc1234')">noc01 (NOC)</button>
+                <button class="btn-quick" onclick="fillQuickLogin('ops01', 'ops1234')">ops01 (Ops)</button>
+                <button class="btn-quick" onclick="fillQuickLogin('admin', 'admin1234')">admin (Admin)</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const usersMockDb = {
+            'noc01': { role: 'NOC', pass: 'noc1234' },
+            'noc02': { role: 'NOC', pass: 'noc1234' },
+            'ops01': { role: 'Operation', pass: 'ops1234' },
+            'ops02': { role: 'Operation', pass: 'ops1234' },
+            'admin': { role: 'Admin', pass: 'admin1234' }
+        };
+
+        function fillQuickLogin(user, pass) {
+            document.getElementById('username').value = user;
+            document.getElementById('password').value = pass;
+            document.getElementById('error-alert').style.display = 'none';
+            // Auto login after populating for mockup convenience
+            setTimeout(() => {
+                document.getElementById('login-form').dispatchEvent(new Event('submit'));
+            }, 200);
+        }
+
+        function handleLogin(event) {
+            event.preventDefault();
+            const user = document.getElementById('username').value.trim();
+            const pass = document.getElementById('password').value;
+            const errorAlert = document.getElementById('error-alert');
+
+            if (usersMockDb[user] && usersMockDb[user].pass === pass) {
+                errorAlert.style.display = 'none';
+                sessionStorage.setItem('loggedInUser', user);
+                sessionStorage.setItem('loggedInRole', usersMockDb[user].role);
+                window.location.href = 'app-prototype.html';
+            } else {
+                errorAlert.style.display = 'block';
+            }
+        }
+
+        // Theme toggle logic matching app-prototype
+        const themeToggleBtn = document.getElementById('theme-toggle-btn');
+        const sunIcon = themeToggleBtn.querySelector('.sun-icon');
+        const moonIcon = themeToggleBtn.querySelector('.moon-icon');
+
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        updateThemeIcons(savedTheme);
+
+        themeToggleBtn.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcons(newTheme);
+        });
+
+        function updateThemeIcons(theme) {
+            if (theme === 'light') {
+                sunIcon.style.display = 'none';
+                moonIcon.style.display = 'block';
+            } else {
+                sunIcon.style.display = 'block';
+                moonIcon.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

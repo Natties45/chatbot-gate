@@ -1,11 +1,16 @@
 import { PrismaClient } from '@prisma/client';
+import { PrismaLibSql } from '@prisma/adapter-libsql';
+import { createClient } from '@libsql/client';
 
 export class CaseService {
   private prisma?: PrismaClient;
 
   private getPrisma() {
     if (!this.prisma) {
-      this.prisma = new PrismaClient();
+      const dbUrl = process.env.DATABASE_URL || 'file:./dev.db';
+      const libsql = createClient({ url: dbUrl });
+      const adapter = new PrismaLibSql(libsql as any);
+      this.prisma = new PrismaClient({ adapter });
     }
     return this.prisma;
   }

@@ -8,7 +8,7 @@ This document describes the current architecture, features, and database design 
 
 `chatbot-gate` is a monorepo setup consisting of a Next.js web application (`apps/web`) and shared types/libraries (`packages/shared`).
 
-- **Frontend & Backend Bridge**: Next.js 15.2 (using App Router, React 19, TypeScript)
+- **Frontend & Backend Bridge**: Next.js 15.5.19 (using App Router, React 19, TypeScript)
 - **Styling**: Tailwind CSS v4.0 with Custom CSS Modules (for component layout and scoped styles)
 - **Database ORM**: Prisma 7.8 (configured with SQLite for development/testing)
 - **Authentication**: JWT-based session store via HTTP-only cookie using the `jose` library
@@ -121,6 +121,18 @@ model Setting {
 
 ## 6. Current Implementation Phase (MVP status)
 
-At the current phase, database persistence and full external API/CLI hooks are simulated via mock clients to preserve quick response iterations:
-- **Session Auth**: Mock credentials are validated (`admin`, `noc01`, `noc02`, `ops01`, `ops02`) using mock users defined in `src/lib/mock-db.ts`.
-- **Chat Processing**: The system mimics AI response generation, ticket drafting, and notification routing with realistic latency (1.5-second processing delay).
+At the current phase, the deployed production pilot is running on the Ubuntu server at `203.154.16.197`. The production root directory is `/opt/chatbot-gate`.
+
+### Deployed & Verified Features
+- **DB-Backed Authentication**: Session auth via HTTP-only secure-conditional cookies. Initial seed creates default admin, NOC, and operation users if the DB is empty.
+- **Admin Management APIs & UI**: Fully operational management of user accounts (add, delete, update status, and password resets), general settings (sync repository URL, target AI model, outbound webhooks), case history viewer, and manual knowledge base synchronizer.
+- **Self-Lockout Protection**: Account controls prevent the currently logged-in administrator from deactivating or deleting their own account.
+- **Live Dashboard Integration**: Metrics and recent case tables display dynamic values sourced from the database (total cases, open cases, active users, synced KB entries, and outbound integration health).
+- **Public Health Endpoint**: Accessible at `/api/health`, returning overall application status and database entity counts without exposing sensitive keys or content.
+- **Knowledge Base Storage**: Mounted production KB successfully loads from `/knowledge-base/knowledge` with 187 entries verified.
+
+### Pending Configuration & Deployment
+- **AI Integration**: The chatbot AI features are currently missing/disabled because `OPENCODE_API_KEY` is not configured in the server's environment. Chat APIs return `503 Service Unavailable` with clean UI handling.
+- **Audit Logging**: The audit logging backend implementation is ready in source code but the live application container has not been rebuilt/deployed yet (see pending status in `docs/production-pilot-log-2026-06-27.md`).
+
+See [production-pilot-log-2026-06-27.md](file:///c:/Users/natti/OneDrive/Documents/natties45/chatbot-gate/docs/production-pilot-log-2026-06-27.md) for the latest deployment history.

@@ -22,6 +22,7 @@ export interface KBEntry {
 export class KnowledgeService {
   private entries: KBEntry[] = [];
   private initialized: boolean = false;
+  private loadedPath: string = '';
   
   constructor() {}
 
@@ -43,6 +44,7 @@ export class KnowledgeService {
       if (loaded) break;
       try {
         if (fs.existsSync(kbPath)) {
+          this.entries = [];
           const files = fs.readdirSync(kbPath);
           const yamlFiles = files.filter(f => f.endsWith('.yaml') || f.endsWith('.yml'));
           
@@ -77,6 +79,7 @@ export class KnowledgeService {
           }
           this.initialized = true;
           loaded = true;
+          this.loadedPath = kbPath;
           console.log(`[KnowledgeService] Loaded ${this.entries.length} knowledge entries from ${kbPath}`);
         }
       } catch (error) {
@@ -87,6 +90,21 @@ export class KnowledgeService {
     if (!loaded) {
       console.warn('[KnowledgeService] Failed to load knowledge base from any known path.');
     }
+  }
+
+  async reload() {
+    this.entries = [];
+    this.initialized = false;
+    this.loadedPath = '';
+    await this.init();
+  }
+
+  getStats() {
+    return {
+      entries: this.entries.length,
+      path: this.loadedPath,
+      initialized: this.initialized,
+    };
   }
 
   // Simple keyword matching search

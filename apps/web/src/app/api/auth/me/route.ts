@@ -1,28 +1,24 @@
 import { NextResponse } from 'next/server';
-import { jwtVerify } from 'jose';
+import { getCurrentUser } from '@/lib/auth';
+import { getPrisma } from '@/lib/db';
 
-const secret = new TextEncoder().encode('mock-secret-for-mvp-12345');
-
-export async function GET(req: Request) {
+export async function GET() {
   try {
-    const cookieHeader = req.headers.get('cookie') || '';
-    const sessionCookie = cookieHeader
-      .split(';')
-      .map(c => c.trim())
-      .find(c => c.startsWith('session='));
-
-    if (!sessionCookie) {
+    const sessionUser = await getCurrentUser();
+    if (!sessionUser) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
-    const token = sessionCookie.split('=')[1];
-    const { payload } = await jwtVerify(token, secret);
-
-    return NextResponse.json({
-      id: payload.id,
-      username: payload.username,
-      role: payload.role,
+    const user = await getPrisma().user.findUnique({
+      where: { id: sessionUser.id },
+      select: { id: true, username: true, role: true, status: true },
     });
+
+    if (!user || user.status !== 'ACTIVE') {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    }
+
+    return NextResponse.json(user);
   } catch (error) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
   }

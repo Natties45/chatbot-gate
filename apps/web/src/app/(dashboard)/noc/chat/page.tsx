@@ -15,6 +15,7 @@ export default function NocChatPage() {
   const [selectedFormat, setSelectedFormat] = useState<'ticket' | 'email' | null>(null);
   const [showMismatch, setShowMismatch] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleAnalyze = async (isFeedback = false) => {
     if (!isFeedback && !problem.trim()) return;
@@ -23,6 +24,7 @@ export default function NocChatPage() {
     setLoading(true);
     if (!isFeedback) setStep(2); // Move to step 2 visually for loading skeletons
     setShowMismatch(false);
+    setErrorMessage('');
 
     try {
       const res = await fetch('/api/chat/noc', {
@@ -34,6 +36,11 @@ export default function NocChatPage() {
         })
       });
       const data = await res.json();
+      if (!res.ok) {
+        setErrorMessage(data.error || 'AI service is not available right now.');
+        setStep(1);
+        return;
+      }
       setAiAnalysis(data);
 
       if (data.isEscalated) {
@@ -45,6 +52,8 @@ export default function NocChatPage() {
       if (isFeedback) setFeedback(''); // Clear feedback after sending
     } catch (err) {
       console.error(err);
+      setErrorMessage('Unable to connect to the AI service right now.');
+      setStep(1);
     } finally {
       setLoading(false);
     }
@@ -131,6 +140,19 @@ export default function NocChatPage() {
             onChange={e => setProblem(e.target.value)}
             disabled={step > 1}
           />
+          {errorMessage && (
+            <div style={{
+              marginTop: '12px',
+              padding: '12px 14px',
+              borderRadius: '8px',
+              border: '1px solid rgba(239, 68, 68, 0.35)',
+              backgroundColor: 'rgba(239, 68, 68, 0.1)',
+              color: 'var(--danger-color, #ef4444)',
+              fontSize: '14px'
+            }}>
+              {errorMessage}
+            </div>
+          )}
           {step === 1 && (
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px' }}>
               <Button variant="primary" onClick={() => handleAnalyze(false)} disabled={!problem.trim() || loading} style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px' }}>

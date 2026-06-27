@@ -50,6 +50,9 @@ export default function OperationChatPage() {
         body: JSON.stringify({ message: userMsg.text })
       });
       const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'AI service is not available right now.');
+      }
       
       const aiMsg: ChatMessage = {
         id: (Date.now() + 1).toString(),
@@ -62,7 +65,7 @@ export default function OperationChatPage() {
       const errorMsg: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: 'ai',
-        text: 'เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์'
+        text: err instanceof Error ? err.message : 'Unable to connect to the AI service right now.'
       };
       setMessages(prev => [...prev, errorMsg]);
     } finally {

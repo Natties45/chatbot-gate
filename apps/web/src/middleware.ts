@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { jwtVerify } from 'jose';
-
-const secret = new TextEncoder().encode('mock-secret-for-mvp-12345');
+import { verifySessionToken } from '@/lib/auth';
 
 export async function middleware(req: NextRequest) {
   const token = req.cookies.get('session')?.value;
@@ -23,8 +21,8 @@ export async function middleware(req: NextRequest) {
   }
 
   try {
-    const { payload } = await jwtVerify(token, secret);
-    const role = payload.role as string;
+    const payload = await verifySessionToken(token);
+    const role = payload.role;
 
     if (isAuthPage) {
       // Redirect based on role if trying to access login page while authenticated
@@ -34,7 +32,10 @@ export async function middleware(req: NextRequest) {
     }
 
     // Role-based route protection
-    if (pathname.startsWith('/admin') && role !== 'ADMIN') {
+    if (pathname.startsWith('/admin/cases') && !['ADMIN', 'NOC', 'OPERATION'].includes(role)) {
+      return NextResponse.redirect(new URL('/login', req.url));
+    }
+    if (pathname.startsWith('/admin') && !pathname.startsWith('/admin/cases') && role !== 'ADMIN') {
       return NextResponse.redirect(new URL('/login', req.url));
     }
     if (pathname.startsWith('/noc') && !['ADMIN', 'NOC'].includes(role)) {

@@ -7,4 +7,4 @@ RUN npm install
 COPY . .
 RUN cd apps/web && npx prisma generate && npm run build
 EXPOSE 3000
-CMD ["npm", "run", "start", "--workspace=apps/web"]
+CMD ["sh", "-c", "cd apps/web && npx prisma db push && npm run seed:production && cd ../.. && npm run start --workspace=apps/web"]

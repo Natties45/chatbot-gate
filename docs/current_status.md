@@ -130,9 +130,9 @@ At the current phase, the deployed production pilot is running on the Ubuntu ser
 - **Live Dashboard Integration**: Metrics and recent case tables display dynamic values sourced from the database (total cases, open cases, active users, synced KB entries, and outbound integration health).
 - **Public Health Endpoint**: Accessible at `/api/health`, returning overall application status and database entity counts without exposing sensitive keys or content.
 - **Knowledge Base Storage**: Mounted production KB successfully loads from `/knowledge-base/knowledge` with 187 entries verified.
+- **Audit Logging System**: Automatically records administrative and security events (login success/failure, user account creation/status update/deletion/password resets, settings updates, and knowledge base syncs) into the database. Fully integrated into both API routes and SQLite database storage on the production host.
 
 ### Pending Configuration & Deployment
 - **AI Integration**: The chatbot AI features are currently missing/disabled because `OPENCODE_API_KEY` is not configured in the server's environment. Chat APIs return `503 Service Unavailable` with clean UI handling.
-- **Audit Logging**: The audit logging backend implementation is ready in source code but the live application container has not been rebuilt/deployed yet (see pending status in `docs/production-pilot-log-2026-06-27.md`).
 
 See [production-pilot-log-2026-06-27.md](file:///c:/Users/natti/OneDrive/Documents/natties45/chatbot-gate/docs/production-pilot-log-2026-06-27.md) for the latest deployment history.

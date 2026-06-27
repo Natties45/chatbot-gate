@@ -8,7 +8,7 @@ declare global {
 
 export function getPrisma() {
   if (!globalThis.chatbotGatePrisma) {
-    const dbUrl = process.env.DATABASE_URL || 'file:./dev.db';
+    const dbUrl = process.env['DATABASE_URL'] || 'file:./dev.db';
     const adapter = new PrismaLibSql({ url: dbUrl });
     globalThis.chatbotGatePrisma = new PrismaClient({ adapter });
   }

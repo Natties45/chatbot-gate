@@ -1,0 +1,66 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id           String   @id @default(uuid())
+  username     String   @unique
+  email        String?  @unique
+  passwordHash String
+  role         String   // "ADMIN", "NOC", "OPERATION"
+  status       String   @default("ACTIVE")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model CaseLog {
+  id         String   @id @default(uuid())
+  date       DateTime @default(now())
+  role       String
+  category   String
+  status     String   @default("OPEN")
+  closedBy   String?
+  confidence Float?
+  summary    String
+  detail     String
+  userId     String   @default("anonymous")
+  createdAt  DateTime @default(now())
+  messages   ChatMessage[]
+}
+
+model ChatMessage {
+  id        String   @id @default(uuid())
+  caseId    String?
+  role      String   // "user" | "assistant"
+  content   String
+  metadata  String?  // JSON
+  createdAt DateTime @default(now())
+  
+  case      CaseLog? @relation(fields: [caseId], references: [id])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  timestamp DateTime @default(now())
+  userId    String
+  action    String
+  target    String?
+  status    String   @default("SUCCESS")
+  ip        String?
+  userAgent String?
+  detail    String?
+}
+
+model Setting {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+}

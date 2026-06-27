@@ -1,9 +1,17 @@
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
-
 export class CaseService {
+  private prisma?: PrismaClient;
+
+  private getPrisma() {
+    if (!this.prisma) {
+      this.prisma = new PrismaClient();
+    }
+    return this.prisma;
+  }
+
   async saveNocSession(userId: string, userMessage: string, aiResponse: any) {
+    const prisma = this.getPrisma();
     try {
       // Create CaseLog
       const newCase = await prisma.caseLog.create({

@@ -1,6 +1,5 @@
 import { PrismaClient } from '@prisma/client';
 import { PrismaLibSql } from '@prisma/adapter-libsql';
-import { createClient } from '@libsql/client';
 
 export class CaseService {
   private prisma?: PrismaClient;
@@ -9,12 +8,8 @@ export class CaseService {
     if (!this.prisma) {
       const dbUrl = process.env['DATABASE_URL'] || 'file:./dev.db';
       console.log('[CaseService] dbUrl is:', dbUrl);
-      const libsql = createClient({ url: dbUrl });
-      const adapter = new PrismaLibSql(libsql as any);
-      this.prisma = new PrismaClient({ 
-        adapter,
-        datasourceUrl: dbUrl
-      });
+      const adapter = new PrismaLibSql({ url: dbUrl });
+      this.prisma = new PrismaClient({ adapter });
     }
     return this.prisma;
   }

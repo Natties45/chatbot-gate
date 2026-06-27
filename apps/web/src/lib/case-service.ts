@@ -7,7 +7,7 @@ export class CaseService {
 
   private getPrisma() {
     if (!this.prisma) {
-      const dbUrl = process.env.DATABASE_URL || 'file:./dev.db';
+      const dbUrl = process.env['DATABASE_URL'] || 'file:./dev.db';
       const libsql = createClient({ url: dbUrl });
       const adapter = new PrismaLibSql(libsql as any);
       this.prisma = new PrismaClient({ adapter });

@@ -11,7 +11,10 @@ export class CaseService {
       console.log('[CaseService] dbUrl is:', dbUrl);
       const libsql = createClient({ url: dbUrl });
       const adapter = new PrismaLibSql(libsql as any);
-      this.prisma = new PrismaClient({ adapter });
+      this.prisma = new PrismaClient({ 
+        adapter,
+        datasourceUrl: dbUrl
+      });
     }
     return this.prisma;
   }

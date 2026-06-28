@@ -14,6 +14,10 @@
           "../openstack-support/knowledge/**": "allow",
           "../openstack-support/style-guide/**": "allow",
           "../openstack-support/AGENTS.md": "allow"
+        },
+        "external_directory": {
+          "/root/openstack-support/**": "allow",
+          "../openstack-support/**": "allow"
         }
       }
     },

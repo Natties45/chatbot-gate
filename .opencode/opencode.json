@@ -9,7 +9,12 @@
       "permission": {
         "edit": "deny",
         "bash": "deny",
-        "read": ["allow", "/root/openstack-support/**", "../openstack-support/knowledge/**", "../openstack-support/style-guide/**", "../openstack-support/AGENTS.md"]
+        "read": {
+          "/root/openstack-support/**": "allow",
+          "../openstack-support/knowledge/**": "allow",
+          "../openstack-support/style-guide/**": "allow",
+          "../openstack-support/AGENTS.md": "allow"
+        }
       }
     },
     "noc-closer": {
@@ -20,7 +25,9 @@
       "permission": {
         "edit": "allow",
         "bash": "deny",
-        "read": ["allow", "./gate-answer/templates/**"]
+        "read": {
+          "./gate-answer/templates/**": "allow"
+        }
       }
     },
     "operation-agent": {

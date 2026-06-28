@@ -17,11 +17,39 @@ interface AnalysisData {
 }
 
 function parseAnalysis(text: string): AnalysisData {
-  const category = text.match(/- Category:\s*(.+)/)?.[1]?.trim() || '';
-  const confidence = text.match(/- Confidence:\s*(.+)/)?.[1]?.trim() || '';
-  const summary = text.match(/- Summary:\s*([\s\S]*?)(?=\n-\s*(?:Sources|Response):)/)?.[1]?.trim() || '';
-  const sources = text.match(/- Sources:\s*([\s\S]*?)(?=\n-\s*(?:Response):)/)?.[1]?.trim() || '';
-  const response = text.match(/- Response:\s*([\s\S]*$)/)?.[1]?.trim() || '';
+  const extractField = (fieldName: string) => {
+    const tableRegex = new RegExp(`\\|\\s*\\*\\*${fieldName}\\*\\*\\s*\\|\\s*(.*?)\\s*\\|`, 'i');
+    let match = text.match(tableRegex);
+    if (match) {
+      return match[1].replace(/^\*\*|\*\*$/g, '').trim();
+    }
+    const bulletRegex = new RegExp(`-\\s*${fieldName}:\\s*(.+)`, 'i');
+    match = text.match(bulletRegex);
+    if (match) return match[1].trim();
+    return '';
+  };
+
+  const category = extractField('Category');
+  let confidence = extractField('Confidence');
+  confidence = confidence.replace('%', '').trim();
+  const summary = extractField('Summary');
+  const sources = extractField('Sources');
+
+  let response = '';
+  const responseMatch = text.match(/###\s*.*ร่างตอบกลับ.*\n+([\s\S]*)$/i);
+  if (responseMatch) {
+    response = responseMatch[1].trim();
+  } else {
+    const oldResponseMatch = text.match(/- Response:\s*([\s\S]*$)/i);
+    if (oldResponseMatch) {
+      response = oldResponseMatch[1].trim();
+    }
+  }
+
+  if (!category && !summary && !response) {
+    return { category: '', confidence: '', summary: '', sources: '', response: text };
+  }
+
   return { category, confidence, summary, sources, response };
 }
 

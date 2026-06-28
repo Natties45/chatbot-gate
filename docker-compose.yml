@@ -1,35 +1,60 @@
 services:
-  web:
-    build: 
+  opencode:
+    build:
       context: .
-      dockerfile: Dockerfile
-    env_file:
-      - .env
-    environment:
-      - DATABASE_URL=file:/app/data/prod.db
-      - KB_PATH=/knowledge-base
-      - NODE_ENV=production
+      dockerfile: Dockerfile.opencode
+    ports:
+      - "4096:4096"
     volumes:
-      - ./app-data:/app/data
-      - ./knowledge-base:/knowledge-base:ro
-    restart: always
+      - opencode-data:/home/opencode
+      - /root/openstack-support:/root/openstack-support:ro
+    restart: unless-stopped
 
   web1:
-    build: 
+    build:
       context: .
       dockerfile: Dockerfile.web1
+      target: prod
     environment:
-      - OPENCODE_SERVER_URL=http://203.154.16.197:4096
+      - OPENCODE_SERVER_URL=http://opencode:4096
       - NODE_ENV=production
-    restart: always
+    depends_on:
+      - opencode
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   nginx:
-    image: nginx:alpine
+    image: nginx:stable
     ports:
       - "80:80"
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
-      - web
-      - web1
-    restart: always
+      web1:
+        condition: service_healthy
+    restart: unless-stopped
+
+  playwright-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile.mcp
+    restart: unless-stopped
+
+  docker-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile.docker-mcp
+    environment:
+      - PORT=1234
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+
+volumes:
+  opencode-data:

@@ -1,0 +1,41 @@
+services:
+  web1:
+    build:
+      context: .
+      dockerfile: Dockerfile.web1
+      target: dev
+    ports:
+      - "4568:4568"
+    environment:
+      - OPENCODE_SERVER_URL=http://host.docker.internal:4096
+      - NODE_ENV=development
+    volumes:
+      - ./apps/web1:/app/apps/web1
+      - ./gate-answer:/app/gate-answer
+      - /app/apps/web1/node_modules
+      - /app/apps/web1/.next
+    command: npx next dev --port 4568 -p 4568
+    restart: unless-stopped
+
+  playwright-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile.mcp
+    ports:
+      - "8931:8931"
+    environment:
+      - PLAYWRIGHT_MCP_PORT=8931
+    restart: unless-stopped
+
+  docker-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile.docker-mcp
+    ports:
+      - "1234:1234"
+    environment:
+      - PORT=1234
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped

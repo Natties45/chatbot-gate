@@ -1,0 +1,21 @@
+FROM ubuntu:24.04 AS base
+
+RUN apt-get update && apt-get install -y curl ca-certificates --no-install-recommends && rm -rf /var/lib/apt/lists/*
+
+ARG TARGETPLATFORM
+RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
+      URL="https://github.com/anomalyco/opencode/releases/download/v1.17.11/opencode-linux-arm64.tar.gz"; \
+    else \
+      URL="https://github.com/anomalyco/opencode/releases/download/v1.17.11/opencode-linux-x64.tar.gz"; \
+    fi && \
+    curl -fsSL "$URL" | tar xzf - -C /usr/local/bin/
+
+WORKDIR /chatbot-gate
+COPY .opencode/ .opencode/
+COPY gate-answer/ gate-answer/
+
+RUN sed -i 's|http://localhost:8931|http://playwright-mcp:8931|g' .opencode/opencode.json && \
+    sed -i 's|http://localhost:1234|http://docker-mcp:1234|g' .opencode/opencode.json
+
+EXPOSE 4096
+CMD ["opencode", "serve", "--hostname", "0.0.0.0", "--port", "4096"]

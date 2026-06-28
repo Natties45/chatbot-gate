@@ -1,0 +1,11 @@
+{
+  "name": "docker-mcp-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "dockerode": "^5.0.1",
+    "express": "^5.1.0"
+  }
+}

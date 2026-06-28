@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NOC Chat Hybrid + Operation Chat — Phase 1.2 Mockup (Final v3)</title>
+  <style>
+    :root {
+      --bg: #fafafa;
+      --surface: #ffffff;
+      --border: #e5e5e5;
+      --text: #171717;
+      --text-secondary: #737373;
+      --accent: #16a34a;
+      --accent-hover: #15803d;
+      --text-on-accent: #ffffff;
+      --user-bubble: #16a34a;
+      --user-text: #ffffff;
+      --assistant-bubble: #f5f5f5;
+      --assistant-text: #171717;
+      --danger: #ef4444;
+      --danger-hover: #dc2626;
+      --badge-bg: #dbeafe;
+      --badge-text: #1d4ed8;
+      --badge-high: #fee2e2;
+      --badge-high-text: #dc2626;
+      --badge-med: #fef3c7;
+      --badge-med-text: #d97706;
+      --sidebar-bg: #ffffff;
+      --sidebar-text: #737373;
+      --sidebar-hover: #f5f5f5;
+      --sidebar-active: #16a34a;
+      --sidebar-active-text: #ffffff;
+      --sidebar-border: #e5e5e5;
+    }
+
+    [data-theme="dark"] {
+      --bg: #111111;
+      --surface: #1a1a1a;
+      --border: #2a2a2a;
+      --text: #e5e5e5;
+      --text-secondary: #a3a3a3;
+      --accent: #4ade80;
+      --accent-hover: #22c55e;
+      --text-on-accent: #111111;
+      --user-bubble: #4ade80;
+      --user-text: #111111;
+      --assistant-bubble: #262626;
+      --assistant-text: #e5e5e5;
+      --danger: #f87171;
+      --danger-hover: #ef4444;
+      --badge-bg: #1e3a5f;
+      --badge-text: #93c5fd;
+      --badge-high: #451a1a;
+      --badge-high-text: #fca5a5;
+      --badge-med: #451a03;
+      --badge-med-text: #fcd34d;
+      --sidebar-bg: #1a1a1a;
+      --sidebar-text: #a3a3a3;
+      --sidebar-hover: #262626;
+      --sidebar-active: #4ade80;
+      --sidebar-active-text: #111111;
+      --sidebar-border: #2a2a2a;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 200px;
+      height: 100vh;
+      background: var(--sidebar-bg);
+      display: flex;
+      flex-direction: column;
+      z-index: 100;
+      border-right: 1px solid var(--sidebar-border);
+    }
+    .sidebarLogo {
+      padding: 16px;
+      font-weight: 700;
+      font-size: 18px;
+      color: var(--accent);
+      border-bottom: 1px solid var(--sidebar-border);
+      letter-spacing: 1px;
+    }
+    .sidebarNav {
+      flex: 1;
+      padding: 12px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .sidebarBtn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      color: var(--sidebar-text);
+      font-size: 13px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.15s;
+      text-align: left;
+      width: 100%;
+    }
+    .sidebarBtn:hover { background: var(--sidebar-hover); }
+    .sidebarBtn.active { background: var(--sidebar-active); color: var(--sidebar-active-text); font-weight: 600; }
+    .sidebarBtnIcon { font-size: 14px; width: 18px; text-align: center; }
+    .sidebarFooter {
+      padding: 12px 8px;
+      border-top: 1px solid var(--sidebar-border);
+    }
+    .themeToggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      color: var(--sidebar-text);
+      font-size: 11px;
+      cursor: pointer;
+      opacity: 0.7;
+      transition: all 0.15s;
+      width: 100%;
+    }
+    .themeToggle:hover { background: var(--sidebar-hover); opacity: 1; }
+
+    .mainContent {
+      margin-left: 200px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .pageHeader {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+    .pageHeader h1 { font-size: 18px; font-weight: 700; }
+    .pageHeaderRight { display: flex; align-items: center; gap: 8px; }
+
+    .page { display: none; flex-direction: column; flex: 1; overflow: hidden; }
+    .page.active { display: flex; }
+
+    .pageBody {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 12px 20px;
+      overflow: hidden;
+      gap: 8px;
+    }
+
+    .btn {
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: none;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btnPrimary { background: var(--accent); color: var(--text-on-accent); }
+    .btnPrimary:hover { background: var(--accent-hover); }
+    .btnOutline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .btnOutline:hover:not(:disabled) { background: var(--border); }
+    .btnDanger { background: var(--danger); color: #ffffff; }
+    .btnDanger:hover { background: var(--danger-hover); }
+    .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .btnSm { padding: 6px 10px; font-size: 12px; }
+
+    .historyPanel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .historyHeader {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      font-weight: 600;
+      font-size: 13px;
+    }
+    .historyTable { max-height: 160px; overflow-y: auto; }
+    .historyRow {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+    }
+    .historyRow:last-child { border-bottom: none; }
+    .historyRow:hover { background: var(--border); }
+    .historyDate { color: var(--text-secondary); margin-right: 10px; white-space: nowrap; }
+    .historyPreview { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .historyActions { display: flex; gap: 4px; margin-left: 10px; }
+
+    .idleState {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      text-align: center;
+      gap: 10px;
+    }
+    .idleState h2 { font-size: 20px; font-weight: 700; }
+    .idleState p { color: var(--text-secondary); font-size: 13px; }
+
+    .chatArea {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .messageBubble { max-width: 75%; }
+    .userBubble {
+      align-self: flex-end;
+      background: var(--user-bubble);
+      color: var(--user-text);
+      padding: 10px 14px;
+      border-radius: 14px 14px 4px 14px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .assistantBubble {
+      align-self: flex-start;
+      background: var(--assistant-bubble);
+      color: var(--assistant-text);
+      padding: 10px 14px;
+      border-radius: 14px 14px 14px 4px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .analysisMiniCard {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      margin-top: 4px;
+    }
+    .analysisBadges { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+    .badge {
+      padding: 3px 8px;
+      border-radius: 16px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badgeCategory { background: var(--badge-bg); color: var(--badge-text); }
+    .badgeConfidence { background: var(--badge-med); color: var(--badge-med-text); }
+    .badgeHigh { background: var(--badge-high); color: var(--badge-high-text); }
+    .analysisSummary { font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; line-height: 1.4; }
+
+    .quickActionBar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 0;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+    .quickActionsLeft { display: flex; gap: 6px; flex: 1; flex-wrap: wrap; }
+
+    .inputSection {
+      flex-shrink: 0;
+      padding-top: 4px;
+    }
+    .inputArea { display: flex; gap: 6px; align-items: flex-end; }
+    .inputArea textarea {
+      flex: 1;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 13px;
+      resize: none;
+      min-height: 70px;
+      max-height: 100px;
+      font-family: inherit;
+      line-height: 1.4;
+    }
+    .inputArea textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 15%, transparent); }
+    .sendBtn {
+      padding: 12px 20px;
+      border-radius: 10px;
+      border: none;
+      background: var(--accent);
+      color: var(--text-on-accent);
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 13px;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+    .sendBtn:hover { background: var(--accent-hover); }
+    .attachBtn {
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 16px;
+      transition: background 0.15s;
+    }
+    .attachBtn:hover { background: var(--border); }
+
+    .fileAttachChip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+    .fileAttachChipName { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .fileAttachChipRemove {
+      cursor: pointer;
+      opacity: 0.6;
+      transition: opacity 0.15s;
+      font-size: 14px;
+      line-height: 1;
+    }
+    .fileAttachChipRemove:hover { opacity: 1; color: var(--danger); }
+
+    .spinner {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .copyToast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--text);
+      color: var(--bg);
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 12px;
+      animation: fadeInOut 2s ease forwards;
+      z-index: 200;
+    }
+    @keyframes fadeInOut {
+      0% { opacity: 0; transform: translateX(-50%) translateY(10px); }
+      15% { opacity: 1; transform: translateX(-50%) translateY(0); }
+      85% { opacity: 1; transform: translateX(-50%) translateY(0); }
+      100% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+    }
+
+    .draftCard {
+      background: var(--surface);
+      border-left: 3px solid var(--accent);
+      border-radius: 4px;
+      padding: 12px;
+      margin-top: 4px;
+      font-size: 12px;
+      line-height: 1.6;
+      white-space: pre-line;
+    }
+
+    .confirmOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 300;
+    }
+    .confirmDialog {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      min-width: 300px;
+      text-align: center;
+    }
+    .confirmDialog h3 { font-size: 16px; margin-bottom: 8px; }
+    .confirmDialog p { font-size: 13px; color: var(--text-secondary); margin-bottom: 20px; }
+    .confirmDialogBtns { display: flex; gap: 10px; justify-content: center; }
+
+    code {
+      background: var(--border);
+      padding: 2px 5px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-family: 'Consolas', 'Monaco', monospace;
+    }
+  </style>
+</head>
+<body>
+
+  <aside class="sidebar">
+    <div class="sidebarLogo">GATE</div>
+    <nav class="sidebarNav">
+      <button class="sidebarBtn active" onclick="switchPage('noc')">
+        <span class="sidebarBtnIcon">&#128737;</span>
+        NOC Chat
+      </button>
+      <button class="sidebarBtn" onclick="switchPage('operation')">
+        <span class="sidebarBtnIcon">&#9881;</span>
+        Operation Chat
+      </button>
+    </nav>
+    <div class="sidebarFooter">
+      <button class="themeToggle" onclick="toggleTheme()">
+        <span>&#9790;</span> Dark / Light
+      </button>
+    </div>
+  </aside>
+
+  <div class="mainContent">
+
+    <!-- ==================== NOC PAGE ==================== -->
+    <div id="nocPage" class="page active">
+      <div class="pageHeader">
+        <h1>NOC Chat</h1>
+        <div class="pageHeaderRight">
+          <button class="btn btnPrimary" onclick="showChat('noc')">+ New Case</button>
+          <button class="btn btnDanger" id="nocCloseBtn" style="display:none;" onclick="closeCase('noc')">ปิดเคส</button>
+        </div>
+      </div>
+
+      <div class="pageBody">
+
+        <div class="historyPanel" id="nocHistory">
+          <div class="historyHeader">
+            <span>เคสที่ยังไม่ปิด</span>
+            <span style="color: var(--text-secondary); font-weight: 400;">2 รายการ</span>
+          </div>
+          <div class="historyTable">
+            <div class="historyRow">
+              <span class="historyDate">28/06 14:30</span>
+              <span class="historyPreview">VM ไม่สามารถ SSH ได้ — Connection timed out</span>
+              <div class="historyActions">
+                <button class="btn btnOutline btnSm">ทำต่อ</button>
+                <button class="btn btnOutline btnSm" style="color: var(--danger);">ลบ</button>
+              </div>
+            </div>
+            <div class="historyRow">
+              <span class="historyDate">27/06 16:00</span>
+              <span class="historyPreview">เปลี่ยนพาสเวิร์ด admin ของ MySQL</span>
+              <div class="historyActions">
+                <button class="btn btnOutline btnSm">ทำต่อ</button>
+                <button class="btn btnOutline btnSm" style="color: var(--danger);">ลบ</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="nocChatArea" style="display: none; flex-direction: column; flex: 1; min-height: 0;">
+
+          <div class="chatArea" id="nocMessages">
+          </div>
+
+          <div class="quickActionBar" id="nocQuickBar">
+            <div class="quickActionsLeft" id="nocQuickLeft">
+              <button class="btn btnOutline btnSm" disabled id="nocBtnDraft">ร่างคำตอบ</button>
+            </div>
+          </div>
+
+          <div class="inputSection">
+            <div class="inputArea">
+              <textarea id="nocInput" placeholder="พิมพ์ข้อความ..."></textarea>
+              <button class="sendBtn" id="nocSendBtn" onclick="nocSend()">Send</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="nocIdle" class="idleState">
+          <h2>เริ่มต้นเคสใหม่</h2>
+          <p>กด "+ New Case" มุมขวาบน เพื่อเริ่มแชท</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== OPERATION PAGE ==================== -->
+    <div id="operationPage" class="page">
+      <div class="pageHeader">
+        <h1>Operation Chat</h1>
+        <div class="pageHeaderRight">
+          <button class="btn btnPrimary" onclick="showChat('op')">+ New Case</button>
+          <button class="btn btnDanger" id="opCloseBtn" style="display:none;" onclick="closeCase('op')">ปิดเคส</button>
+        </div>
+      </div>
+
+      <div class="pageBody">
+
+        <div class="historyPanel" id="opHistory">
+          <div class="historyHeader">
+            <span>Operation Cases</span>
+            <span style="color: var(--text-secondary); font-weight: 400;">1 รายการ</span>
+          </div>
+          <div class="historyTable">
+            <div class="historyRow">
+              <span class="historyDate">28/06 10:15</span>
+              <span class="historyPreview">ตรวจสอบ disk usage บน storage node เกิน 90%</span>
+              <div class="historyActions">
+                <button class="btn btnOutline btnSm">ทำต่อ</button>
+                <button class="btn btnOutline btnSm" style="color: var(--danger);">ลบ</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="opChatArea" style="display: none; flex-direction: column; flex: 1; min-height: 0;">
+          <div class="chatArea" id="opMessages">
+          </div>
+
+          <div class="quickActionBar">
+            <div class="quickActionsLeft" id="opQuickLeft">
+              <button class="btn btnOutline btnSm" id="opBtnDraft" onclick="opDraft()">ร่างคำตอบ</button>
+            </div>
+          </div>
+
+          <div class="inputSection">
+            <div id="opFileChip" style="display:none;"></div>
+            <div class="inputArea">
+              <button class="attachBtn" onclick="opAttachFile()" title="แนบไฟล์">&#128206;</button>
+              <textarea id="opInput" placeholder="พิมพ์ข้อความ operation..."></textarea>
+              <button class="sendBtn" onclick="opSend()">Send</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="opIdle" class="idleState">
+          <h2>เริ่มต้นเคสใหม่</h2>
+          <p>กด "+ New Case" มุมขวาบน เพื่อเริ่มแชท</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="confirmOverlay" class="confirmOverlay" style="display: none;">
+    <div class="confirmDialog">
+      <h3 id="confirmTitle">ต้องการปิดเคสนี้?</h3>
+      <p id="confirmMsg">เคสจะถูกบันทึกและลบออกจากประวัติ</p>
+      <div class="confirmDialogBtns">
+        <button class="btn btnOutline" onclick="hideConfirm()">ยกเลิก</button>
+        <button class="btn btnDanger" id="confirmAction" onclick="doConfirm()">ปิดเคส</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="copyToast" class="copyToast" style="display: none;">คัดลอกไปยัง clipboard แล้ว</div>
+
+  <script>
+    function switchPage(page) {
+      const currentPage = document.querySelector('.page.active');
+      if ((page === 'noc' && currentPage?.id === 'nocPage') ||
+          (page === 'operation' && currentPage?.id === 'operationPage')) {
+        goHome(page);
+        return;
+      }
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.sidebarBtn').forEach(t => t.classList.remove('active'));
+      if (page === 'noc') {
+        document.getElementById('nocPage').classList.add('active');
+        document.querySelectorAll('.sidebarBtn')[0].classList.add('active');
+      } else {
+        document.getElementById('operationPage').classList.add('active');
+        document.querySelectorAll('.sidebarBtn')[1].classList.add('active');
+      }
+    }
+
+    function toggleTheme() {
+      const html = document.documentElement;
+      const current = html.getAttribute('data-theme');
+      html.setAttribute('data-theme', current === 'light' ? 'dark' : 'light');
+    }
+
+    function showChat(prefix) {
+      if (prefix === 'noc') {
+        document.getElementById('nocChatArea').style.display = 'flex';
+        document.getElementById('nocIdle').style.display = 'none';
+        document.getElementById('nocHistory').style.display = 'none';
+        document.getElementById('nocCloseBtn').style.display = 'inline-flex';
+        nocState = 1;
+        updateNocUI();
+      } else {
+        document.getElementById('opChatArea').style.display = 'flex';
+        document.getElementById('opIdle').style.display = 'none';
+        document.getElementById('opHistory').style.display = 'none';
+        document.getElementById('opCloseBtn').style.display = 'inline-flex';
+        initOpChat();
+      }
+    }
+
+    function goHome(prefix) {
+      if (prefix === 'noc') {
+        document.getElementById('nocChatArea').style.display = 'none';
+        document.getElementById('nocIdle').style.display = 'flex';
+        document.getElementById('nocHistory').style.display = 'block';
+        document.getElementById('nocCloseBtn').style.display = 'none';
+        document.getElementById('nocMessages').innerHTML = '';
+        nocState = 1;
+      } else {
+        document.getElementById('opChatArea').style.display = 'none';
+        document.getElementById('opIdle').style.display = 'flex';
+        document.getElementById('opHistory').style.display = 'block';
+        document.getElementById('opCloseBtn').style.display = 'none';
+        document.getElementById('opMessages').innerHTML = '';
+      }
+    }
+
+    let confirmCallback = null;
+    function closeCase(prefix) {
+      document.getElementById('confirmOverlay').style.display = 'flex';
+      confirmCallback = () => goHome(prefix);
+    }
+    function hideConfirm() {
+      document.getElementById('confirmOverlay').style.display = 'none';
+      confirmCallback = null;
+    }
+    function doConfirm() {
+      if (confirmCallback) confirmCallback();
+      hideConfirm();
+    }
+
+    // ===== NOC Chat State Machine =====
+    // State 1: ยังไม่ส่งข้อความแรก → Send = analyze
+    // State 2: วิเคราะห์แล้ว → ร่างคำตอบ enabled, Send = freeform (เพิ่มเติมข้อมูล)
+    // State 3: มีร่างแล้ว → Copy/ใช้ร่างนี้, Send = freeform
+    let nocState = 1;
+
+    function updateNocUI() {
+      const draftBtn = document.getElementById('nocBtnDraft');
+      const quickLeft = document.getElementById('nocQuickLeft');
+
+      if (nocState === 1) {
+        draftBtn.disabled = true;
+        quickLeft.innerHTML = '';
+        quickLeft.appendChild(draftBtn);
+      } else if (nocState === 2) {
+        draftBtn.disabled = false;
+        quickLeft.innerHTML = '';
+        quickLeft.appendChild(draftBtn);
+      } else if (nocState === 3) {
+        quickLeft.innerHTML = '';
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'btn btnOutline btnSm';
+        copyBtn.textContent = 'Copy';
+        copyBtn.onclick = showCopyToast;
+        const useBtn = document.createElement('button');
+        useBtn.className = 'btn btnPrimary btnSm';
+        useBtn.textContent = 'ใช้ร่างนี้';
+        useBtn.onclick = () => { closeCase('noc'); };
+        quickLeft.appendChild(copyBtn);
+        quickLeft.appendChild(useBtn);
+      }
+    }
+
+    function nocSend() {
+      const input = document.getElementById('nocInput');
+      const msg = input.value.trim();
+      if (!msg) return;
+      const chatArea = document.getElementById('nocMessages');
+
+      const userBubble = document.createElement('div');
+      userBubble.className = 'messageBubble userBubble';
+      userBubble.textContent = msg;
+      chatArea.appendChild(userBubble);
+      input.value = '';
+
+      setTimeout(() => {
+        if (nocState === 1) {
+          // ข้อความแรก → prompt วิเคราะห์ → State 2
+          const aiBubble = document.createElement('div');
+          aiBubble.className = 'messageBubble assistantBubble';
+          aiBubble.textContent = 'ปัญหาที่ลูกค้าแจ้งเกี่ยวกับ VM ไม่สามารถ SSH ได้ อาจเกิดจาก Security Group ไม่ได้เปิด port 22 หรือ firewall ภายใน VM block การเชื่อมต่อ แนะนำให้ตรวจสอบ Security Group rules และ firewall ภายใน VM ก่อนครับ';
+          chatArea.appendChild(aiBubble);
+          nocState = 2;
+          updateNocUI();
+        } else if (nocState === 2) {
+          // ส่งต่อ → prompt เพิ่มเติมข้อมูล → ยัง State 2 (ตอบแบบ freeform)
+          const aiBubble = document.createElement('div');
+          aiBubble.className = 'messageBubble assistantBubble';
+          aiBubble.textContent = 'รับทราบครับ จะนำข้อมูลเพิ่มเติมไปปรับปรุงการวิเคราะห์';
+          chatArea.appendChild(aiBubble);
+        } else {
+          // State 3 → freeform chat
+          const aiBubble = document.createElement('div');
+          aiBubble.className = 'messageBubble assistantBubble';
+          aiBubble.textContent = 'รับทราบครับ จะปรับปรุงร่างคำตอบตามข้อมูลที่คุณให้มา';
+          chatArea.appendChild(aiBubble);
+        }
+        chatArea.scrollTop = chatArea.scrollHeight;
+      }, 500);
+
+      chatArea.scrollTop = chatArea.scrollHeight;
+    }
+
+    document.getElementById('nocBtnDraft').onclick = function() {
+      if (nocState < 2) return;
+      const chatArea = document.getElementById('nocMessages');
+      const userBubble = document.createElement('div');
+      userBubble.className = 'messageBubble userBubble';
+      userBubble.textContent = '[ร่างคำตอบ]';
+      chatArea.appendChild(userBubble);
+
+      setTimeout(() => {
+        const aiBubble = document.createElement('div');
+        aiBubble.className = 'messageBubble assistantBubble';
+        aiBubble.innerHTML = `
+          <div class="draftCard">เรียน ผู้ใช้บริการ
+
+จากการตรวจสอบเบื้องต้น พบว่าปัญหาอาจเกิดจาก Security Group ของ Instance ไม่ได้เปิดอนุญาตการเข้าถึง port 22 (SSH)
+
+ขั้นตอนแนะนำ:
+1. เข้าไปที่ OLS Console > Compute > Instances
+2. เลือกแท็บ Security Groups
+3. ตรวจสอบ rule อนุญาต inbound traffic บน port 22
+4. หากไม่มี ให้เพิ่ม rule ใหม่
+
+หากยังมีปัญหา แจ้งกลับมาได้ครับ
+
+ขอบคุณครับ</div>`;
+        chatArea.appendChild(aiBubble);
+        nocState = 3;
+        updateNocUI();
+        chatArea.scrollTop = chatArea.scrollHeight;
+      }, 500);
+      chatArea.scrollTop = chatArea.scrollHeight;
+    };
+
+    // ===== Operation Chat =====
+    let opMsgCount = 0;
+
+    function initOpChat() {
+      opMsgCount = 0;
+    }
+
+    function opSend() {
+      const input = document.getElementById('opInput');
+      const msg = input.value.trim();
+      if (!msg) return;
+      const chatArea = document.getElementById('opMessages');
+
+      const userBubble = document.createElement('div');
+      userBubble.className = 'messageBubble userBubble';
+      userBubble.textContent = msg;
+      chatArea.appendChild(userBubble);
+      input.value = '';
+
+      const spinnerBubble = document.createElement('div');
+      spinnerBubble.className = 'messageBubble assistantBubble';
+      spinnerBubble.style.display = 'flex';
+      spinnerBubble.style.alignItems = 'center';
+      spinnerBubble.style.gap = '8px';
+      spinnerBubble.innerHTML = '<span class="spinner"></span><span style="color: var(--text-secondary); font-size: 12px;">กำลังตอบ...</span>';
+      chatArea.appendChild(spinnerBubble);
+      chatArea.scrollTop = chatArea.scrollHeight;
+
+      setTimeout(() => {
+        spinnerBubble.remove();
+        const aiBubble = document.createElement('div');
+        aiBubble.className = 'messageBubble assistantBubble';
+        opMsgCount++;
+        if (opMsgCount === 1) {
+          aiBubble.innerHTML = `
+            <strong>Issue:</strong> ปัญหาที่แจ้ง<br>
+            <strong>Cause:</strong> สาเหตุที่เป็นไปได้<br>
+            <strong>Actions:</strong>
+            <ol style="margin-left: 14px; margin-top: 4px;">
+              <li>ตรวจสอบสถานะ</li>
+              <li>ดำเนินการแก้ไข</li>
+              <li>ทดสอบผลลัพธ์</li>
+            </ol>`;
+        } else {
+          aiBubble.textContent = 'รับทราบครับ กำลังดำเนินการตรวจสอบเพิ่มเติม';
+        }
+        chatArea.appendChild(aiBubble);
+        chatArea.scrollTop = chatArea.scrollHeight;
+      }, 1000);
+    }
+
+    function opDraft() {
+      const chatArea = document.getElementById('opMessages');
+      const userBubble = document.createElement('div');
+      userBubble.className = 'messageBubble userBubble';
+      userBubble.textContent = '[ร่างคำตอบ]';
+      chatArea.appendChild(userBubble);
+
+      setTimeout(() => {
+        const aiBubble = document.createElement('div');
+        aiBubble.className = 'messageBubble assistantBubble';
+        aiBubble.innerHTML = `
+          <div class="draftCard">เรียน ทีม Operation
+
+จากการตรวจสอบ พบว่า disk usage บน storage node เกิน 90%
+
+ขั้นตอนแนะนำ:
+1. ตรวจสอบ OSD ที่ใช้งานเกิน
+2. เคลียร์ข้อมูลที่ไม่จำเป็น
+3. ขยาย storage หากต้องการ
+
+ขอบคุณครับ</div>`;
+        chatArea.appendChild(aiBubble);
+        chatArea.scrollTop = chatArea.scrollHeight;
+      }, 500);
+      chatArea.scrollTop = chatArea.scrollHeight;
+    }
+
+    let attachedFileName = null;
+
+    function opAttachFile() {
+      attachedFileName = 'ceph-health.log';
+      const chip = document.getElementById('opFileChip');
+      chip.style.display = 'block';
+      chip.innerHTML = `
+        <div class="fileAttachChip">
+          <span class="fileAttachChipName">📄 ${attachedFileName}</span>
+          <span class="fileAttachChipRemove" onclick="opRemoveFile()">✕</span>
+        </div>`;
+      document.getElementById('opInput').focus();
+    }
+
+    function opRemoveFile() {
+      attachedFileName = null;
+      const chip = document.getElementById('opFileChip');
+      chip.style.display = 'none';
+      chip.innerHTML = '';
+    }
+
+    function showCopyToast() {
+      const toast = document.getElementById('copyToast');
+      toast.style.display = 'block';
+      setTimeout(() => { toast.style.display = 'none'; }, 2000);
+    }
+  </script>
+</body>
+</html>

@@ -7,10 +7,13 @@
 **Status:** {{STATUS}}
 
 ## Issue Summary
+
 {{SUMMARY}}
 
 ## Resolution
+
 {{RESOLUTION}}
 
 ## Session ID
+
 {{SESSION_ID}}

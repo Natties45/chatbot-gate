@@ -5,19 +5,15 @@
       "description": "NOC support agent — analyzes customer issues with KB-backed answers",
       "mode": "primary",
       "temperature": 0.2,
-      "prompt": "{file:./gate-answer/agents/noc-agent.md}",
+      "prompt": "{file:../gate-answer/agents/noc-agent.md}",
       "permission": {
         "edit": "deny",
         "bash": "deny",
         "read": {
-          "/root/openstack-support/**": "allow",
-          "../openstack-support/knowledge/**": "allow",
-          "../openstack-support/style-guide/**": "allow",
-          "../openstack-support/AGENTS.md": "allow"
+          "/root/openstack-support/**": "allow"
         },
         "external_directory": {
-          "/root/openstack-support/**": "allow",
-          "../openstack-support/**": "allow"
+          "/root/openstack-support/**": "allow"
         }
       }
     },
@@ -25,12 +21,12 @@
       "description": "NOC case closer — saves case log file in build mode",
       "mode": "primary",
       "temperature": 0.1,
-      "prompt": "{file:./gate-answer/agents/noc-closer.md}",
+      "prompt": "{file:../gate-answer/agents/noc-closer.md}",
       "permission": {
         "edit": "allow",
         "bash": "deny",
         "read": {
-          "./gate-answer/templates/**": "allow"
+          "../gate-answer/templates/**": "allow"
         }
       }
     },
@@ -38,8 +34,20 @@
       "description": "Operations engineer agent — analyzes logs, diagnoses root causes, recommends actions",
       "mode": "primary",
       "temperature": 0.2,
-      "prompt": "{file:./gate-answer/agents/operation-agent.md}",
+      "prompt": "{file:../gate-answer/agents/operation-agent.md}",
       "permission": { "edit": "deny", "bash": "deny", "read": "allow" }
+    }
+  },
+  "mcp": {
+    "playwright": {
+      "type": "remote",
+      "url": "http://localhost:8931/sse",
+      "enabled": true
+    },
+    "docker": {
+      "type": "remote",
+      "url": "http://localhost:1234/sse",
+      "enabled": true
     }
   }
 }

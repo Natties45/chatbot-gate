@@ -3,7 +3,7 @@ import { opencodeService } from '@/lib/opencode-service';
 import fs from 'fs/promises';
 import path from 'path';
 
-const PROMPT_DIR = path.join(process.cwd(), '..', '..', '.opencode', 'gate-answer', 'prompts');
+const PROMPT_DIR = path.join(process.cwd(), '..', '..', 'gate-answer', 'prompts');
 
 const AGENT_MAP: Record<string, string> = {
   analyze: 'noc-agent',
@@ -11,6 +11,8 @@ const AGENT_MAP: Record<string, string> = {
   email: 'noc-agent',
   feedback: 'noc-agent',
   close: 'noc-closer',
+  chat: 'noc-agent',
+  'draft-feedback': 'noc-agent',
 };
 
 async function loadPromptFile(promptType: string): Promise<string> {
@@ -52,13 +54,22 @@ export async function POST(req: NextRequest) {
 
         const agent = AGENT_MAP[promptType];
         let systemPrompt = await loadPromptFile(promptType);
+
+        if (body.history && Array.isArray(body.history) && body.history.length > 0) {
+          const historyText = body.history
+            .map((m: any) => `${m.role === 'user' ? 'Customer' : 'Agent'}: ${m.content}`)
+            .join('\n\n');
+          systemPrompt = `Previous conversation:\n${historyText}\n\n---\n${systemPrompt}`;
+        }
+
         systemPrompt = interpolate(systemPrompt, {
           MESSAGE: message || '',
           FEEDBACK: additionalInfo || '',
           SESSION_ID: sessionId,
         });
 
-        const userText = promptType === 'feedback' ? (additionalInfo || message || '') : (message || `Process ${promptType} request`);
+        const isFeedbackType = promptType === 'feedback' || promptType === 'draft-feedback';
+        const userText = isFeedbackType ? (additionalInfo || message || '') : (message || `Process ${promptType} request`);
         const response = await opencodeService.sendSystemMessage(sessionId, agent, systemPrompt, userText);
         return NextResponse.json({ response });
       }

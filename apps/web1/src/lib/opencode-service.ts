@@ -20,11 +20,11 @@ export class OpencodeService {
     return res.ok ? this.safeJson(res) : null;
   }
 
-  async createSession(title?: string): Promise<string> {
+  async createSession(_title?: string): Promise<string> {
     const res = await fetch(`${this.baseUrl}/session`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title }),
+      body: '{}',
     });
     if (!res.ok) throw new Error(`createSession failed: ${res.status}`);
     const data = await this.safeJson(res);
@@ -39,6 +39,7 @@ export class OpencodeService {
         agent,
         parts: [{ type: 'text', text: userText }],
       }),
+      signal: AbortSignal.timeout(120000),
     });
     if (!res.ok) throw new Error(`sendMessage failed: ${res.status}`);
     const data = await this.safeJson(res);
@@ -57,6 +58,7 @@ export class OpencodeService {
         system: systemPrompt,
         parts: [{ type: 'text', text: userText }],
       }),
+      signal: AbortSignal.timeout(120000),
     });
     if (!res.ok) throw new Error(`sendSystemMessage failed: ${res.status}`);
     const data = await this.safeJson(res);

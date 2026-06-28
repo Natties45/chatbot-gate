@@ -10,7 +10,7 @@
   gap: 8px;
 }
 .button:disabled { opacity: 0.6; cursor: not-allowed; }
-.primary { background-color: var(--accent-color); color: white; }
+.primary { background-color: var(--accent-color); color: var(--text-on-accent); }
 .primary:hover:not(:disabled) { background-color: var(--accent-hover); }
 .secondary { background-color: var(--bg-color); color: var(--text-color); border: 1px solid var(--border-color); }
 .secondary:hover:not(:disabled) { background-color: var(--border-color); }

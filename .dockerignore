@@ -8,3 +8,11 @@ out
 .git
 .gitignore
 *.log
+adr/
+docs/
+agents/
+governance/
+packages/
+apps/web/
+.vscode/
+README.md

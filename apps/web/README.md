@@ -1,3 +1,5 @@
+> **DEPRECATED** — This app has incorrect AI integration (tries to call `api.opencode.ai` which does not exist). Use `apps/web1` instead.
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started

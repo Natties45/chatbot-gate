@@ -6,12 +6,13 @@ interface AppLayoutProps {
   children: ReactNode;
   title: string;
   headerAction?: ReactNode;
+  onSidebarActiveClick?: () => void;
 }
 
-export function AppLayout({ children, title, headerAction }: AppLayoutProps) {
+export function AppLayout({ children, title, headerAction, onSidebarActiveClick }: AppLayoutProps) {
   return (
     <div className={styles.layout}>
-      <Sidebar />
+      <Sidebar onActiveClick={onSidebarActiveClick} />
       <main className={styles.main}>
         <header className={styles.header}>
           <h1 className={styles.title}>{title}</h1>

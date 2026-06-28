@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { opencodeService } from '@/lib/opencode-service';
+import fs from 'fs/promises';
+import path from 'path';
 
 const OP_AGENT = 'operation-agent';
+const PROMPT_DIR = path.join(process.cwd(), '..', '..', 'gate-answer', 'prompts');
 
 export async function POST(req: NextRequest) {
   try {
@@ -22,7 +25,17 @@ export async function POST(req: NextRequest) {
         if (!sessionId) {
           return NextResponse.json({ error: 'sessionId required' }, { status: 400 });
         }
-        const response = await opencodeService.sendMessage(sessionId, OP_AGENT, message || '');
+        let systemPrompt = await fs.readFile(path.join(PROMPT_DIR, 'op-send.md'), 'utf-8');
+
+        if (body.history && Array.isArray(body.history) && body.history.length > 0) {
+          const historyText = body.history
+            .map((m: any) => `${m.role === 'user' ? 'Customer' : 'Agent'}: ${m.content}`)
+            .join('\n\n');
+          systemPrompt = `Previous conversation:\n${historyText}\n\n---\n${systemPrompt}`;
+        }
+
+        const interpolated = systemPrompt.replace('{{MESSAGE}}', message || '');
+        const response = await opencodeService.sendSystemMessage(sessionId, OP_AGENT, interpolated, message || '');
         return NextResponse.json({ response });
       }
 

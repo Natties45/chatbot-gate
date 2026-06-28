@@ -9,7 +9,7 @@
       "permission": {
         "edit": "deny",
         "bash": "deny",
-        "read": ["allow", "../openstack-support/knowledge/**", "../openstack-support/style-guide/**", "../openstack-support/AGENTS.md"]
+        "read": ["allow", "/root/openstack-support/**", "../openstack-support/knowledge/**", "../openstack-support/style-guide/**", "../openstack-support/AGENTS.md"]
       }
     },
     "noc-closer": {

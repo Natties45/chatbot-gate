@@ -5,9 +5,19 @@ export class OpencodeService {
     this.baseUrl = process.env.OPENCODE_SERVER_URL || 'http://localhost:4096';
   }
 
+  private async safeJson(res: Response): Promise<any> {
+    const text = await res.text();
+    if (!text) return null;
+    try {
+      return JSON.parse(text);
+    } catch {
+      return text;
+    }
+  }
+
   async health() {
     const res = await fetch(`${this.baseUrl}/global/health`, { signal: AbortSignal.timeout(3000) });
-    return res.ok ? res.json() : null;
+    return res.ok ? this.safeJson(res) : null;
   }
 
   async createSession(title?: string): Promise<string> {
@@ -17,8 +27,8 @@ export class OpencodeService {
       body: JSON.stringify({ title }),
     });
     if (!res.ok) throw new Error(`createSession failed: ${res.status}`);
-    const data = await res.json();
-    return data.id;
+    const data = await this.safeJson(res);
+    return data && typeof data === 'object' ? data.id : data;
   }
 
   async sendMessage(sessionId: string, agent: string, userText: string): Promise<string> {
@@ -31,7 +41,8 @@ export class OpencodeService {
       }),
     });
     if (!res.ok) throw new Error(`sendMessage failed: ${res.status}`);
-    const data = await res.json();
+    const data = await this.safeJson(res);
+    if (!data || typeof data !== 'object') return String(data);
     const parts = data.parts || [];
     const textParts = parts.filter((p: any) => p.type === 'text');
     return textParts.map((p: any) => p.text).join('\n') || JSON.stringify(data);
@@ -48,7 +59,8 @@ export class OpencodeService {
       }),
     });
     if (!res.ok) throw new Error(`sendSystemMessage failed: ${res.status}`);
-    const data = await res.json();
+    const data = await this.safeJson(res);
+    if (!data || typeof data !== 'object') return String(data);
     const parts = data.parts || [];
     const textParts = parts.filter((p: any) => p.type === 'text');
     return textParts.map((p: any) => p.text).join('\n') || JSON.stringify(data);
@@ -61,15 +73,15 @@ export class OpencodeService {
   async getAgents(): Promise<any[]> {
     const res = await fetch(`${this.baseUrl}/agent`);
     if (!res.ok) return [];
-    const data = await res.json();
-    return data || [];
+    const data = await this.safeJson(res);
+    return Array.isArray(data) ? data : [];
   }
 
   async getProviders(): Promise<any[]> {
     const res = await fetch(`${this.baseUrl}/config/providers`);
     if (!res.ok) return [];
-    const data = await res.json();
-    return data.providers || [];
+    const data = await this.safeJson(res);
+    return data && typeof data === 'object' && Array.isArray(data.providers) ? data.providers : [];
   }
 }
 

@@ -1,39 +1,31 @@
 # chatbot-gate
 
-`chatbot-gate` is an app project for a web-based chatbot gateway deployed on an Ubuntu Linux server.
+Chatbot Gateway — AI-powered NOC and Operation support tool.
 
-The initial architecture is intentionally minimal:
+## Architecture
 
-```text
-user/admin -> web app frontend -> server-side opencode.ai CLI bridge -> MCP / KB
+See [docs/architecture.md](docs/architecture.md) for the full design.
+
+**Core concept:** opencode is a free standalone binary (MIT) that runs as a local HTTP server. This app calls opencode's API to provide AI-assisted chat for NOC and Operation teams.
+
+## Structure
+
+```
+apps/web/        ← OLD (deprecated, incorrect AI integration)
+apps/web1/       ← NEW (simplified, no login, tests core opencode integration)
+.opencode/       ← opencode agent and prompt definitions
+docs/            ← architecture documentation
 ```
 
-## Current Scope
+## Quick Start
 
-- Build a chatbot web app with separate user and admin access paths.
-- Keep `opencode` CLI execution on the server side only.
-- Connect the CLI bridge to MCP servers and/or a knowledge base.
-- Start with research and architecture before choosing runtime tools.
-- Deploy to Ubuntu Linux after the implementation approach is approved.
+1. Install opencode binary (`opencode serve --hostname 0.0.0.0 --port 4096`)
+2. `cd apps/web1 && npm install && npm run dev`
+3. Open http://localhost:4568
 
-## Initial Decisions
+## Dev
 
-- Project type: app
-- Naming theme: Final Fantasy IX
-- Initial agents:
-  - `vivi-researcher`
-  - `cid-architect`
-- Preferred deployment direction: Ubuntu Linux server, likely with Nginx and either systemd or Docker Compose after runtime selection.
-
-## Project Files
-
-- `docs/project/overview.md` contains the project overview and working architecture.
-- `adr/ADR-0001-project-foundation.md` records the first project foundation decision.
-- `agents/` contains self-contained project agent specs.
-- `governance/source-of-truth.md` defines where decisions should live.
-
-## Next Work
-
-1. Use `vivi-researcher` to compare frontend/backend/runtime options.
-2. Use `cid-architect` to turn the chosen approach into an implementation design.
-3. Approve the runtime scaffold before adding application code.
+```bash
+npm install          # from root (workspaces)
+npm run dev --workspace=apps/web1
+```

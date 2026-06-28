@@ -1,0 +1,34 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "agent": {
+    "noc-agent": {
+      "description": "NOC support agent — analyzes customer issues with KB-backed answers",
+      "mode": "primary",
+      "temperature": 0.2,
+      "prompt": "{file:./gate-answer/agents/noc-agent.md}",
+      "permission": {
+        "edit": "deny",
+        "bash": "deny",
+        "read": ["allow", "../openstack-support/knowledge/**", "../openstack-support/style-guide/**", "../openstack-support/AGENTS.md"]
+      }
+    },
+    "noc-closer": {
+      "description": "NOC case closer — saves case log file in build mode",
+      "mode": "primary",
+      "temperature": 0.1,
+      "prompt": "{file:./gate-answer/agents/noc-closer.md}",
+      "permission": {
+        "edit": "allow",
+        "bash": "deny",
+        "read": ["allow", "./gate-answer/templates/**"]
+      }
+    },
+    "operation-agent": {
+      "description": "Operations engineer agent — analyzes logs, diagnoses root causes, recommends actions",
+      "mode": "primary",
+      "temperature": 0.2,
+      "prompt": "{file:./gate-answer/agents/operation-agent.md}",
+      "permission": { "edit": "deny", "bash": "deny", "read": "allow" }
+    }
+  }
+}

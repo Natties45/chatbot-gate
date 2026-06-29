@@ -11,11 +11,11 @@ RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
     curl -fsSL "$URL" | tar xzf - -C /usr/local/bin/
 
 WORKDIR /chatbot-gate
-COPY .opencode/ .opencode/
-COPY gate-answer/ gate-answer/
+COPY apps/web1/opencode.json apps/web1/opencode.json
+COPY apps/web1/gate-answer/ apps/web1/gate-answer/
 
-RUN sed -i 's|http://localhost:8931|http://playwright-mcp:8931|g' .opencode/opencode.json && \
-    sed -i 's|http://localhost:1234|http://docker-mcp:1234|g' .opencode/opencode.json
+RUN sed -i 's|http://localhost:8931|http://playwright-mcp:8931|g' apps/web1/opencode.json && \
+    sed -i 's|http://localhost:1234|http://docker-mcp:1234|g' apps/web1/opencode.json
 
 EXPOSE 4096
 CMD ["opencode", "serve", "--hostname", "0.0.0.0", "--port", "4096"]

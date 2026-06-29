@@ -8,11 +8,10 @@ out
 .git
 .gitignore
 *.log
-adr/
 docs/
 agents/
-governance/
+skills/
 packages/
-apps/web/
+.secrets/
 .vscode/
 README.md

@@ -1,521 +1,655 @@
 <!DOCTYPE html>
 <html lang="th" data-theme="dark">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Settings — Version 1.10 Mockup</title>
-  <style>
-    :root {
-      --bg: #fafafa;
-      --surface: #ffffff;
-      --border: #e5e5e5;
-      --text: #171717;
-      --text-secondary: #737373;
-      --accent: #16a34a;
-      --accent-hover: #15803d;
-      --text-on-accent: #ffffff;
-      --user-bubble: #16a34a;
-      --user-text: #ffffff;
-      --assistant-bubble: #f5f5f5;
-      --assistant-text: #171717;
-      --danger: #ef4444;
-      --danger-hover: #dc2626;
-      --badge-bg: #dbeafe;
-      --badge-text: #1d4ed8;
-      --badge-high: #fee2e2;
-      --badge-high-text: #dc2626;
-      --badge-med: #fef3c7;
-      --badge-med-text: #d97706;
-      --sidebar-bg: #ffffff;
-      --sidebar-text: #737373;
-      --sidebar-hover: #f5f5f5;
-      --sidebar-active: #16a34a;
-      --sidebar-active-text: #ffffff;
-      --sidebar-border: #e5e5e5;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>chatbot-gate v1.10 Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --background: #ffffff;
+  --bg-color: #fafafa;
+  --panel-bg: #ffffff;
+  --border-color: #e5e5e5;
+  --text-color: #171717;
+  --text-muted: #737373;
+  --accent-color: #16a34a;
+  --accent-hover: #15803d;
+  --text-on-accent: #ffffff;
+  --danger-color: #ef4444;
+  --danger-hover: #dc2626;
+  --warning-color: #eab308;
+  --primary-color: #1a73e8;
+  --badge-bg: #dbeafe;
+  --badge-text: #1d4ed8;
+  --badge-high: #fee2e2;
+  --badge-high-text: #dc2626;
+  --badge-med: #fef3c7;
+  --badge-med-text: #d97706;
+}
+[data-theme='dark'] {
+  --bg-color: #111111;
+  --panel-bg: #1a1a1a;
+  --border-color: #2a2a2a;
+  --text-color: #e5e5e5;
+  --text-muted: #a3a3a3;
+  --accent-color: #4ade80;
+  --accent-hover: #22c55e;
+  --text-on-accent: #111111;
+  --danger-color: #f87171;
+  --danger-hover: #ef4444;
+  --warning-color: #facc15;
+  --primary-color: #60a5fa;
+  --badge-bg: #1e3a5f;
+  --badge-text: #93c5fd;
+  --badge-high: #451a1a;
+  --badge-high-text: #fca5a5;
+  --badge-med: #451a03;
+  --badge-med-text: #fcd34d;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', 'Noto Sans Thai', sans-serif; background-color: var(--bg-color); color: var(--text-color); transition: background-color 0.2s, color 0.2s; }
+input, textarea, button, select { font-family: inherit; }
 
-    [data-theme="dark"] {
-      --bg: #111111;
-      --surface: #1a1a1a;
-      --border: #2a2a2a;
-      --text: #e5e5e5;
-      --text-secondary: #a3a3a3;
-      --accent: #4ade80;
-      --accent-hover: #22c55e;
-      --text-on-accent: #111111;
-      --user-bubble: #4ade80;
-      --user-text: #111111;
-      --assistant-bubble: #262626;
-      --assistant-text: #e5e5e5;
-      --danger: #f87171;
-      --danger-hover: #ef4444;
-      --badge-bg: #1e3a5f;
-      --badge-text: #93c5fd;
-      --badge-high: #451a1a;
-      --badge-high-text: #fca5a5;
-      --badge-med: #451a03;
-      --badge-med-text: #fcd34d;
-      --sidebar-bg: #1a1a1a;
-      --sidebar-text: #a3a3a3;
-      --sidebar-hover: #262626;
-      --sidebar-active: #4ade80;
-      --sidebar-active-text: #111111;
-      --sidebar-border: #2a2a2a;
-    }
+.loginPage { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg-color); padding: 24px; }
+.loginPage.hidden { display: none; }
+.loginCard { width: min(360px, 100%); background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 24px; }
+.loginLogo { font-weight: 700; font-size: 22px; color: var(--accent-color); letter-spacing: 1px; margin-bottom: 4px; }
+.loginSubtitle { color: var(--text-muted); font-size: 13px; margin-bottom: 20px; }
+.loginError { display: none; color: var(--danger-color); font-size: 12px; margin-top: 10px; }
+.loginError.show { display: block; }
+.layout { display: none; min-height: 100vh; background-color: var(--bg-color); }
+.layout.authenticated { display: flex; }
+.sidebar { width: 200px; height: 100vh; background-color: var(--panel-bg); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; position: fixed; left: 0; top: 0; z-index: 100; }
+.sidebarHeader { padding: 16px; border-bottom: 1px solid var(--border-color); }
+.logo { font-weight: 700; font-size: 18px; color: var(--accent-color); letter-spacing: 1px; }
+.nav { flex: 1; padding: 12px 8px; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; }
+.navItem { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 8px; color: var(--text-muted); font-size: 13px; font-weight: 500; transition: all 0.15s; border: 0; background: transparent; text-align: left; cursor: pointer; }
+.navItem:hover { background-color: var(--bg-color); }
+.navItem.active { background-color: var(--accent-color); color: var(--text-on-accent); font-weight: 600; }
+.navIcon { width: 14px; height: 14px; flex-shrink: 0; }
+.sidebarFooter { padding: 12px 8px; border-top: 1px solid var(--border-color); }
+.themeToggle { display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 6px; color: var(--text-muted); font-size: 11px; cursor: pointer; opacity: 0.7; transition: all 0.15s; }
+.themeToggle:hover { background-color: var(--bg-color); opacity: 1; }
 
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { height: 100%; }
-    body {
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      display: flex;
-      transition: background 0.2s, color 0.2s;
-    }
+.main { flex: 1; margin-left: 200px; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+.header { padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); background-color: var(--panel-bg); flex-shrink: 0; }
+.title { font-size: 18px; font-weight: 700; color: var(--text-color); }
+.headerAction { display: flex; align-items: center; gap: 8px; }
+.content { flex: 1; padding: 12px 20px; display: flex; flex-direction: column; overflow: hidden; gap: 8px; }
+.page { display: none; flex-direction: column; flex: 1; min-height: 0; }
+.page.active { display: flex; }
 
-    .sidebar {
-      position: fixed;
-      left: 0;
-      top: 0;
-      width: 200px;
-      height: 100vh;
-      background: var(--sidebar-bg);
-      display: flex;
-      flex-direction: column;
-      z-index: 100;
-      border-right: 1px solid var(--sidebar-border);
-    }
-    .sidebarLogo {
-      padding: 16px;
-      font-weight: 700;
-      font-size: 18px;
-      color: var(--accent);
-      border-bottom: 1px solid var(--sidebar-border);
-      letter-spacing: 1px;
-    }
-    .sidebarNav {
-      flex: 1;
-      padding: 12px 8px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-    .sidebarBtn {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px 12px;
-      border-radius: 8px;
-      border: none;
-      background: transparent;
-      color: var(--sidebar-text);
-      font-size: 13px;
-      cursor: pointer;
-      font-weight: 500;
-      transition: all 0.15s;
-      text-align: left;
-      width: 100%;
-    }
-    .sidebarBtn:hover { background: var(--sidebar-hover); }
-    .sidebarBtn.active { background: var(--sidebar-active); color: var(--sidebar-active-text); font-weight: 600; }
-    .sidebarBtnIcon { font-size: 14px; width: 18px; text-align: center; }
-    .sidebarFooter {
-      padding: 12px 8px;
-      border-top: 1px solid var(--sidebar-border);
-    }
-    .themeToggle {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 10px;
-      border-radius: 6px;
-      border: none;
-      background: transparent;
-      color: var(--sidebar-text);
-      font-size: 11px;
-      cursor: pointer;
-      opacity: 0.7;
-      transition: all 0.15s;
-      width: 100%;
-    }
-    .themeToggle:hover { background: var(--sidebar-hover); opacity: 1; }
+.button { display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; font-weight: 500; cursor: pointer; border: none; transition: all 0.2s; gap: 8px; }
+.button:disabled { opacity: 0.6; cursor: not-allowed; }
+.primary { background-color: var(--accent-color); color: var(--text-on-accent); }
+.primary:hover:not(:disabled) { background-color: var(--accent-hover); }
+.secondary { background-color: var(--bg-color); color: var(--text-color); border: 1px solid var(--border-color); }
+.secondary:hover:not(:disabled) { background-color: var(--border-color); }
+.danger { background-color: var(--danger-color); color: white; }
+.danger:hover:not(:disabled) { opacity: 0.9; }
+.sm { padding: 6px 12px; font-size: 13px; }
 
-    .mainContent {
-      margin-left: 200px;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      overflow: hidden;
-    }
+.idleState { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; text-align: center; gap: 8px; color: var(--text-muted); }
+.idleState h2 { font-size: 20px; font-weight: 700; color: var(--text-color); }
+.idleState p { font-size: 13px; }
 
-    .pageHeader {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 20px;
-      border-bottom: 1px solid var(--border);
-      background: var(--surface);
-      flex-shrink: 0;
-    }
-    .pageHeader h1 { font-size: 18px; font-weight: 700; }
-    .pageHeaderRight { display: flex; align-items: center; gap: 8px; }
+.toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; flex-shrink: 0; }
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field label { font-size: 11px; color: var(--text-muted); font-weight: 600; }
+.input, .select { height: 34px; padding: 7px 10px; font-size: 12px; color: var(--text-color); background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 6px; outline: none; }
+.input:focus, .select:focus { border-color: var(--accent-color); }
+.searchCase { min-width: 140px; }
+.countText { margin-left: auto; font-size: 12px; color: var(--text-muted); }
 
-    .page { display: none; flex-direction: column; flex: 1; overflow: hidden; }
-    .page.active { display: flex; }
+.caseTablePanel { flex: 1; overflow: auto; background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 10px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead { position: sticky; top: 0; z-index: 1; }
+th { text-align: left; padding: 10px 12px; font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; background: var(--panel-bg); border-bottom: 1px solid var(--border-color); }
+td { padding: 10px 12px; border-bottom: 1px solid var(--border-color); white-space: nowrap; }
+tbody tr:hover { background: var(--bg-color); }
+.actionsCell { text-align: right; }
+.caseId { font-weight: 600; color: var(--accent-color); font-variant-numeric: tabular-nums; }
+.loadMoreBar { display: flex; justify-content: center; padding: 8px 0 0; flex-shrink: 0; }
+.badge { display: inline-flex; align-items: center; border-radius: 9999px; padding: 4px 10px; font-size: 12px; font-weight: 500; line-height: 1; }
+.badgeDefault { background-color: var(--border-color); color: var(--text-color); }
+.badgeInfo { background-color: rgba(59,130,246,0.15); color: rgb(59,130,246); border: 1px solid rgba(59,130,246,0.3); }
+.badgeSuccess { background-color: rgba(34,197,94,0.15); color: rgb(34,197,94); border: 1px solid rgba(34,197,94,0.3); }
+.badgeWarning { background-color: rgba(234,179,8,0.15); color: rgb(234,179,8); border: 1px solid rgba(234,179,8,0.3); }
 
-    .pageBody {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      padding: 12px 20px;
-      overflow: hidden;
-      gap: 8px;
-    }
+.settingsPageContent { overflow-y: auto; }
+.settingsSection { background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 10px; padding: 16px; max-width: 760px; margin-bottom: 8px; }
+.settingsSectionLabel { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; padding-bottom: 8px; margin-bottom: 14px; border-bottom: 1px solid var(--border-color); }
+.sectionHeaderRow { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 8px; margin-bottom: 14px; border-bottom: 1px solid var(--border-color); }
+.sectionHeaderRow .settingsSectionLabel { padding: 0; margin: 0; border-bottom: 0; }
+.settingsGroup { margin-bottom: 16px; }
+.settingsGroup:last-child { margin-bottom: 0; }
+.settingsGroupTitle { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; margin-bottom: 10px; }
+.settingsTag { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 16px; background: var(--badge-bg); color: var(--badge-text); }
+.settingsDivider { height: 1px; background: var(--border-color); margin: 14px 0; }
+.settingsLabel { display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 500; margin-bottom: 6px; }
+.settingsValue { font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.settingsHint { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+.settingsSelect { width: 100%; padding: 8px 12px; font-size: 13px; color: var(--text-color); background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; outline: none; cursor: pointer; }
+.settingsSelect:focus { border-color: var(--accent-color); }
+input[type='range'] { -webkit-appearance: none; width: 100%; height: 6px; border-radius: 3px; background: var(--border-color); outline: none; }
+input[type='range']::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--accent-color); cursor: pointer; border: 2px solid var(--panel-bg); }
+.sliderRow { display: flex; align-items: center; gap: 10px; }
+.sliderRow input[type='range'] { flex: 1; }
+.sliderMin, .sliderMax { font-size: 11px; color: var(--text-muted); width: 16px; text-align: center; }
+.advancedButton { margin-top: 10px; color: var(--text-muted); background: transparent; border: 1px solid var(--border-color); }
+.advancedButton:hover { background: var(--bg-color); color: var(--text-color); }
+.advancedPanel { display: none; margin-top: 12px; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-color); }
+.advancedPanel.open { display: block; }
+.saveBar { display: flex; align-items: center; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color); }
+.saveMsg { font-size: 12px; color: var(--accent-color); opacity: 0; transition: opacity 0.3s; }
+.saveMsg.show { opacity: 1; }
+.userTablePanel { border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden; }
+.userTablePanel table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.userTablePanel th { text-align: left; padding: 10px 12px; font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; background: var(--panel-bg); border-bottom: 1px solid var(--border-color); }
+.userTablePanel td { padding: 10px 12px; border-bottom: 1px solid var(--border-color); }
+.userTablePanel tr:last-child td { border-bottom: 0; }
+.userName { font-weight: 600; }
+.actionBtns { display: flex; gap: 6px; justify-content: flex-end; }
+.draftNote { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
 
-    .btn {
-      padding: 8px 14px;
-      border-radius: 8px;
-      border: none;
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-    .btnPrimary { background: var(--accent); color: var(--text-on-accent); }
-    .btnPrimary:hover { background: var(--accent-hover); }
-    .btnOutline { background: transparent; border: 1px solid var(--border); color: var(--text); }
-    .btnOutline:hover:not(:disabled) { background: var(--border); }
-    .btn:disabled { opacity: 0.35; cursor: not-allowed; }
-    .btnSm { padding: 6px 10px; font-size: 12px; }
-
-    .settingsContent {
-      flex: 1;
-      overflow-y: auto;
-      padding: 16px 0;
-    }
-
-    .settingsSection {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 16px;
-      margin-bottom: 12px;
-    }
-    .settingsSectionTitle {
-      font-size: 14px;
-      font-weight: 600;
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .settingsSectionTag {
-      font-size: 10px;
-      font-weight: 600;
-      padding: 2px 8px;
-      border-radius: 100px;
-      background: var(--badge-bg);
-      color: var(--badge-text);
-    }
-
-    .settingsField {
-      margin-bottom: 14px;
-    }
-    .settingsField:last-child { margin-bottom: 0; }
-    .settingsLabel {
-      font-size: 13px;
-      font-weight: 500;
-      margin-bottom: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .settingsLabelRight {
-      font-size: 12px;
-      color: var(--text-secondary);
-      font-weight: 400;
-      font-variant-numeric: tabular-nums;
-    }
-    .settingsHint {
-      font-size: 11px;
-      color: var(--text-secondary);
-      margin-top: 4px;
-    }
-
-    select.settingsSelect {
-      width: 100%;
-      padding: 8px 12px;
-      font-size: 13px;
-      color: var(--text);
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      outline: none;
-      cursor: pointer;
-      appearance: none;
-      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23737373' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-      background-repeat: no-repeat;
-      background-position: right 8px center;
-      background-size: 20px;
-      padding-right: 36px;
-    }
-    select.settingsSelect:focus { border-color: var(--accent); }
-
-    input[type="range"] {
-      -webkit-appearance: none;
-      width: 100%;
-      height: 6px;
-      border-radius: 3px;
-      background: var(--border);
-      outline: none;
-    }
-    input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      background: var(--accent);
-      cursor: pointer;
-      border: 2px solid var(--surface);
-    }
-    .sliderRow {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .sliderRow input[type="range"] { flex: 1; }
-    .sliderMin, .sliderMax {
-      font-size: 11px;
-      color: var(--text-secondary);
-      width: 16px;
-      text-align: center;
-    }
-
-    .idleState {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      flex: 1;
-      text-align: center;
-      gap: 10px;
-    }
-    .idleState h2 { font-size: 20px; font-weight: 700; }
-    .idleState p { color: var(--text-secondary); font-size: 13px; }
-  </style>
+.modalOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.48); display: none; align-items: center; justify-content: center; z-index: 300; padding: 24px; }
+.modalOverlay.open { display: flex; }
+.caseModal { width: min(900px, 100%); max-height: 88vh; background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; }
+.userModal { width: min(480px, 100%); }
+.modalHeader { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 16px 18px; border-bottom: 1px solid var(--border-color); }
+.modalTitle { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+.modalMeta { display: flex; gap: 8px; flex-wrap: wrap; font-size: 12px; color: var(--text-muted); }
+.modalBody { padding: 16px 18px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
+.summaryPanel { background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 10px; padding: 12px; display: none; }
+.summaryPanel.show { display: block; }
+.summaryPanel h3, .chatPanel h3 { font-size: 13px; margin-bottom: 8px; }
+.summaryPanel p { font-size: 13px; line-height: 1.55; color: var(--text-color); margin-top: 6px; }
+.chatPanel { display: flex; flex-direction: column; gap: 10px; }
+.messageBubble { max-width: 75%; }
+.userBubble { align-self: flex-end; background: var(--accent-color); color: var(--text-on-accent); padding: 10px 14px; border-radius: 14px 14px 4px 14px; font-size: 13px; line-height: 1.5; white-space: pre-wrap; }
+.assistantBubble { align-self: flex-start; background: var(--bg-color); color: var(--text-color); padding: 10px 14px; border-radius: 14px 14px 14px 4px; font-size: 13px; line-height: 1.5; white-space: pre-wrap; }
+.draftCard { align-self: flex-start; max-width: 75%; background: var(--bg-color); border-left: 3px solid var(--accent-color); border-radius: 4px; padding: 12px; font-size: 12px; line-height: 1.6; white-space: pre-line; }
+.messageTime { display: block; margin-top: 4px; opacity: 0.7; font-size: 11px; }
+.emptyState { padding: 36px 20px; text-align: center; color: var(--text-muted); font-size: 13px; }
+.formGrid { display: grid; gap: 12px; }
+.formField { display: flex; flex-direction: column; gap: 6px; }
+.formField label { font-size: 12px; color: var(--text-muted); font-weight: 600; }
+.formInput, .formSelect { height: 36px; padding: 8px 10px; font-size: 13px; color: var(--text-color); background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; outline: none; }
+.formInput:focus, .formSelect:focus { border-color: var(--accent-color); }
+.formInput:disabled { opacity: 0.55; cursor: not-allowed; }
+.formActions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; padding-top: 12px; border-top: 1px solid var(--border-color); }
+.formHint { font-size: 11px; color: var(--text-muted); }
+</style>
 </head>
 <body>
+<div id="loginPage" class="loginPage">
+  <div class="loginCard">
+    <div class="loginLogo">GATE</div>
+    <div class="loginSubtitle">Sign in to NOC and Operation support</div>
+    <div class="formGrid">
+      <div class="formField">
+        <label>Username</label>
+        <input id="loginUsername" class="formInput" value="admin" placeholder="admin" onkeydown="if(event.key==='Enter')loginMock()">
+      </div>
+      <div class="formField">
+        <label>Password</label>
+        <input id="loginPassword" class="formInput" type="password" value="admin" placeholder="admin" onkeydown="if(event.key==='Enter')loginMock()">
+      </div>
+      <button class="button primary sm" onclick="loginMock()">Login</button>
+      <div id="loginError" class="loginError">Invalid username or password.</div>
+    </div>
+  </div>
+</div>
 
+<div class="layout">
   <aside class="sidebar">
-    <div class="sidebarLogo">GATE</div>
-    <nav class="sidebarNav">
-      <button class="sidebarBtn" onclick="switchPage('noc')">
-        <span class="sidebarBtnIcon">&#128737;</span>
-        NOC Chat
+    <div class="sidebarHeader"><div class="logo">GATE</div></div>
+    <nav class="nav">
+      <button class="navItem active" onclick="switchPage('noc')">
+        <svg class="navIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span>NOC Chat</span>
       </button>
-      <button class="sidebarBtn" onclick="switchPage('operation')">
-        <span class="sidebarBtnIcon">&#9881;</span>
-        Operation Chat
+      <button class="navItem" onclick="switchPage('operation')">
+        <svg class="navIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M2 12h3M19 12h3M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12"/></svg>
+        <span>Operation Chat</span>
       </button>
-      <button class="sidebarBtn active" onclick="switchPage('settings')">
-        <span class="sidebarBtnIcon">&#9881;</span>
-        Settings
+      <button class="navItem" onclick="switchPage('history')">
+        <svg class="navIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span>Case History</span>
+      </button>
+      <button class="navItem" onclick="switchPage('settings')">
+        <svg class="navIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+        <span>Settings</span>
       </button>
     </nav>
-    <div class="sidebarFooter">
-      <button class="themeToggle" onclick="toggleTheme()">
-        <span>&#9790;</span> Dark / Light
-      </button>
-    </div>
+    <div class="sidebarFooter"><div class="themeToggle" onclick="toggleTheme()"><span>&#9790;</span><span>Dark / Light</span></div></div>
   </aside>
 
-  <div class="mainContent">
+  <main class="main">
+    <section id="nocPage" class="page active">
+      <header class="header"><h1 class="title">NOC Chat</h1><div class="headerAction"><button class="button primary sm">+ New Case</button></div></header>
+      <div class="content"><div class="idleState"><h2>Start a new case</h2><p>Click + New Case to begin a NOC support conversation</p></div></div>
+    </section>
 
-    <!-- ==================== SETTINGS PAGE ==================== -->
-    <div id="settingsPage" class="page active">
-      <div class="pageHeader">
-        <h1>Settings</h1>
+    <section id="operationPage" class="page">
+      <header class="header"><h1 class="title">Operation Chat</h1><div class="headerAction"><button class="button primary sm">+ New Case</button></div></header>
+      <div class="content"><div class="idleState"><h2>Start a new case</h2><p>Click + New Case to begin an Operation investigation</p></div></div>
+    </section>
+
+    <section id="historyPage" class="page">
+      <header class="header"><h1 class="title">Case History</h1><div class="headerAction"><button class="button secondary sm" onclick="exportMarkdown()">Export Markdown</button></div></header>
+      <div class="content">
+        <div class="toolbar">
+          <div class="field"><label>From</label><input id="fromDate" class="input" type="date" value="2026-06-29" onchange="renderCases(true)"></div>
+          <div class="field"><label>To</label><input id="toDate" class="input" type="date" value="2026-06-29" onchange="renderCases(true)"></div>
+          <div class="field"><label>Page</label><select id="pageFilter" class="select" onchange="renderCases(true)"><option value="">All</option><option>NOC</option><option>Operation</option></select></div>
+          <div class="field"><label>Status</label><select id="statusFilter" class="select" onchange="renderCases(true)"><option value="">All</option><option value="in_progress">In Progress</option><option value="closed">Closed</option></select></div>
+          <div class="field"><label>Case ID</label><input id="caseSearch" class="input searchCase" placeholder="29066901" oninput="renderCases(true)"></div>
+          <span id="caseCount" class="countText">0 cases</span>
+        </div>
+        <div class="caseTablePanel">
+          <table>
+            <thead><tr><th>ID</th><th>User</th><th>Role</th><th>Page</th><th>Created</th><th>Updated</th><th>Status</th><th class="actionsCell">Action</th></tr></thead>
+            <tbody id="caseTableBody"></tbody>
+          </table>
+        </div>
+        <div class="loadMoreBar"><button id="loadMoreBtn" class="button secondary sm" onclick="loadMoreCases()">Load more</button></div>
       </div>
+    </section>
 
-      <div class="pageBody">
-        <div class="settingsContent">
-
-          <!-- ========== GENERAL ========== -->
-          <div class="settingsSection">
-            <div class="settingsSectionTitle">General</div>
-
-            <div class="settingsField">
-              <div class="settingsLabel">NOC Model</div>
-              <select class="settingsSelect">
-                <option>deepseek/deepseek-chat</option>
-                <option>openai/gpt-5</option>
-                <option>anthropic/claude-sonnet-4-5</option>
-                <option>google/gemini-3-pro</option>
-              </select>
-              <div class="settingsHint">โมเดลที่ใช้ตอบแชทลูกค้า วิเคราะห์ปัญหา ร่างข้อความ</div>
-            </div>
-
-            <div class="settingsField">
-              <div class="settingsLabel">Operation Model</div>
-              <select class="settingsSelect">
-                <option>deepseek/deepseek-chat</option>
-                <option>openai/gpt-5</option>
-                <option>anthropic/claude-sonnet-4-5</option>
-                <option>google/gemini-3-pro</option>
-              </select>
-              <div class="settingsHint">โมเดลที่ใช้วิเคราะห์ log ตรวจสอบ infrastructure</div>
+    <section id="settingsPage" class="page">
+      <header class="header"><h1 class="title">Settings</h1></header>
+      <div class="content settingsPageContent">
+        <div class="settingsSection">
+          <div class="settingsSectionLabel">opencode</div>
+          <div class="settingsGroup">
+            <div class="settingsGroupTitle">NOC Agent <span class="settingsTag">noc-agent</span></div>
+            <div class="settingsLabel">NOC Model</div>
+            <select class="settingsSelect"><option>deepseek/deepseek-chat</option><option>openai/gpt-5</option><option>anthropic/claude-sonnet-4-5</option><option>google/gemini-3-pro</option></select>
+            <div class="settingsHint">Model for analyzing customer issues and drafting Thai responses</div>
+            <button class="button sm advancedButton" onclick="toggleAdvanced('nocAdvanced', this)">Advanced ▸</button>
+            <div id="nocAdvanced" class="advancedPanel">
+              <div class="settingsLabel">Temperature <span class="settingsValue" id="nocTempVal">0.20</span></div>
+              <div class="sliderRow"><span class="sliderMin">0</span><input type="range" min="0" max="100" value="20" oninput="updateSlider('nocTempVal', this)"><span class="sliderMax">1</span></div>
+              <div class="settingsLabel" style="margin-top:12px">Top P <span class="settingsValue" id="nocTopPVal">1.00</span></div>
+              <div class="sliderRow"><span class="sliderMin">0</span><input type="range" min="0" max="100" value="100" oninput="updateSlider('nocTopPVal', this)"><span class="sliderMax">1</span></div>
             </div>
           </div>
-
-          <!-- ========== ADVANCED — NOC Agent ========== -->
-          <div class="settingsSection">
-            <div class="settingsSectionTitle">
-              NOC Agent
-              <span class="settingsSectionTag">noc-agent</span>
-            </div>
-
-            <div class="settingsField">
-              <div class="settingsLabel">
-                Temperature
-                <span class="settingsLabelRight">0.20</span>
-              </div>
-              <div class="sliderRow">
-                <span class="sliderMin">0</span>
-                <input type="range" min="0" max="100" value="20" step="1">
-                <span class="sliderMax">1</span>
-              </div>
-              <div class="settingsHint">ต่ำ = แม่นยำ ตรงไปตรงมา / สูง = สร้างสรรค์ขึ้น</div>
-            </div>
-
-            <div class="settingsField">
-              <div class="settingsLabel">
-                Top P
-                <span class="settingsLabelRight">1.00</span>
-              </div>
-              <div class="sliderRow">
-                <span class="sliderMin">0</span>
-                <input type="range" min="0" max="100" value="100" step="1">
-                <span class="sliderMax">1</span>
-              </div>
-              <div class="settingsHint">ต่ำ = เลือกเฉพาะ token ที่มั่นใจ / 1.0 = ไม่จำกัด</div>
+          <div class="settingsDivider"></div>
+          <div class="settingsGroup">
+            <div class="settingsGroupTitle">Operation Agent <span class="settingsTag">operation-agent</span></div>
+            <div class="settingsLabel">Operation Model</div>
+            <select class="settingsSelect"><option>deepseek/deepseek-chat</option><option>openai/gpt-5</option><option>anthropic/claude-sonnet-4-5</option><option>google/gemini-3-pro</option></select>
+            <div class="settingsHint">Model for infrastructure analysis and log investigation</div>
+            <button class="button sm advancedButton" onclick="toggleAdvanced('opAdvanced', this)">Advanced ▸</button>
+            <div id="opAdvanced" class="advancedPanel">
+              <div class="settingsLabel">Temperature <span class="settingsValue" id="opTempVal">0.20</span></div>
+              <div class="sliderRow"><span class="sliderMin">0</span><input type="range" min="0" max="100" value="20" oninput="updateSlider('opTempVal', this)"><span class="sliderMax">1</span></div>
+              <div class="settingsLabel" style="margin-top:12px">Top P <span class="settingsValue" id="opTopPVal">1.00</span></div>
+              <div class="sliderRow"><span class="sliderMin">0</span><input type="range" min="0" max="100" value="100" oninput="updateSlider('opTopPVal', this)"><span class="sliderMax">1</span></div>
             </div>
           </div>
-
-          <!-- ========== ADVANCED — Operation Agent ========== -->
-          <div class="settingsSection">
-            <div class="settingsSectionTitle">
-              Operation Agent
-              <span class="settingsSectionTag">operation-agent</span>
-            </div>
-
-            <div class="settingsField">
-              <div class="settingsLabel">
-                Temperature
-                <span class="settingsLabelRight">0.20</span>
-              </div>
-              <div class="sliderRow">
-                <span class="sliderMin">0</span>
-                <input type="range" min="0" max="100" value="20" step="1">
-                <span class="sliderMax">1</span>
-              </div>
-            </div>
-
-            <div class="settingsField">
-              <div class="settingsLabel">
-                Top P
-                <span class="settingsLabelRight">1.00</span>
-              </div>
-              <div class="sliderRow">
-                <span class="sliderMin">0</span>
-                <input type="range" min="0" max="100" value="100" step="1">
-                <span class="sliderMax">1</span>
-              </div>
+          <div class="settingsDivider"></div>
+          <div class="settingsGroup">
+            <div class="settingsGroupTitle">NOC Closer Agent <span class="settingsTag">noc-closer</span></div>
+            <div class="settingsHint">Used for case log generation. Keep low for consistency.</div>
+            <button class="button sm advancedButton" onclick="toggleAdvanced('closerAdvanced', this)">Advanced ▸</button>
+            <div id="closerAdvanced" class="advancedPanel">
+              <div class="settingsLabel">Temperature <span class="settingsValue" id="closerTempVal">0.10</span></div>
+              <div class="sliderRow"><span class="sliderMin">0</span><input type="range" min="0" max="100" value="10" oninput="updateSlider('closerTempVal', this)"><span class="sliderMax">1</span></div>
             </div>
           </div>
+          <div class="saveBar"><button class="button primary sm" onclick="showSaveMsg()">Save Changes</button><span class="saveMsg" id="saveMsg">Settings saved</span></div>
+        </div>
 
-          <!-- ========== ADVANCED — NOC Closer ========== -->
-          <div class="settingsSection">
-            <div class="settingsSectionTitle">
-              NOC Closer Agent
-              <span class="settingsSectionTag">noc-closer</span>
-            </div>
-
-            <div class="settingsField">
-              <div class="settingsLabel">
-                Temperature
-                <span class="settingsLabelRight">0.10</span>
-              </div>
-              <div class="sliderRow">
-                <span class="sliderMin">0</span>
-                <input type="range" min="0" max="100" value="10" step="1">
-                <span class="sliderMax">1</span>
-              </div>
-              <div class="settingsHint">ใช้ตอนปิดเคสและสร้าง case log</div>
-            </div>
+        <div class="settingsSection">
+          <div class="sectionHeaderRow">
+            <div class="settingsSectionLabel">Account Management</div>
+            <button class="button primary sm" onclick="showUserModal('add')">+ Add User</button>
           </div>
-
+          <div class="draftNote">Draft UI only. Page/role locking will be implemented later.</div>
+          <div class="userTablePanel">
+            <table>
+              <thead><tr><th>User</th><th>Role</th><th>Status</th><th class="actionsCell">Action</th></tr></thead>
+              <tbody id="userTableBody"></tbody>
+            </table>
+          </div>
         </div>
       </div>
-    </div>
+    </section>
+  </main>
+</div>
 
-    <!-- ==================== NOC PAGE (ซ่อน) ==================== -->
-    <div id="nocPage" class="page">
-      <div class="pageHeader">
-        <h1>NOC Chat</h1>
+<div id="caseModalOverlay" class="modalOverlay" onclick="closeCaseModal(event)">
+  <div class="caseModal" onclick="event.stopPropagation()">
+    <div class="modalHeader">
+      <div>
+        <div class="modalTitle" id="modalTitle">Case</div>
+        <div class="modalMeta" id="modalMeta"></div>
       </div>
-      <div class="pageBody">
-        <div class="idleState">
-          <h2>เริ่มต้นเคสใหม่</h2>
-          <p>กด "+ New Case" มุมขวาบน เพื่อเริ่มแชท</p>
-        </div>
-      </div>
+      <button class="button secondary sm" onclick="hideCaseModal()">Close</button>
     </div>
-
-    <!-- ==================== OPERATION PAGE (ซ่อน) ==================== -->
-    <div id="operationPage" class="page">
-      <div class="pageHeader">
-        <h1>Operation Chat</h1>
+    <div class="modalBody">
+      <div id="summaryPanel" class="summaryPanel">
+        <h3>Closed Summary</h3>
+        <p id="modalSummary"></p>
+        <h3 style="margin-top:12px">Detail / Resolution</h3>
+        <p id="modalDetail"></p>
       </div>
-      <div class="pageBody">
-        <div class="idleState">
-          <h2>เริ่มต้นเคสใหม่</h2>
-          <p>กด "+ New Case" มุมขวาบน เพื่อเริ่มแชท</p>
-        </div>
+      <div class="chatPanel">
+        <h3>Chat History</h3>
+        <div id="modalMessages" class="chatPanel"></div>
       </div>
     </div>
-
   </div>
+</div>
 
-  <script>
-    function switchPage(page) {
-      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-      document.querySelectorAll('.sidebarBtn').forEach(t => t.classList.remove('active'));
-      if (page === 'noc') {
-        document.getElementById('nocPage').classList.add('active');
-        document.querySelectorAll('.sidebarBtn')[0].classList.add('active');
-      } else if (page === 'operation') {
-        document.getElementById('operationPage').classList.add('active');
-        document.querySelectorAll('.sidebarBtn')[1].classList.add('active');
-      } else {
-        document.getElementById('settingsPage').classList.add('active');
-        document.querySelectorAll('.sidebarBtn')[2].classList.add('active');
-      }
+<div id="userModalOverlay" class="modalOverlay" onclick="closeUserModal(event)">
+  <div class="caseModal userModal" onclick="event.stopPropagation()">
+    <div class="modalHeader">
+      <div>
+        <div class="modalTitle" id="userModalTitle">Add User</div>
+        <div class="modalMeta"><span id="userModalHint">Create a user account draft.</span></div>
+      </div>
+      <button class="button secondary sm" onclick="hideUserModal()">Close</button>
+    </div>
+    <div class="modalBody">
+      <div class="formGrid">
+        <div class="formField">
+          <label>User</label>
+          <input id="userFormName" class="formInput" placeholder="username">
+        </div>
+        <div class="formField">
+          <label>Password</label>
+          <input id="userFormPassword" class="formInput" type="password" placeholder="Leave blank when editing to keep current password">
+        </div>
+        <div class="formField">
+          <label>Confirm Pass</label>
+          <input id="userFormConfirm" class="formInput" type="password" placeholder="Must match password">
+        </div>
+        <div class="formField">
+          <label>Role</label>
+          <select id="userFormRole" class="formSelect"><option>admin</option><option>operation</option><option>noc</option></select>
+        </div>
+        <div class="formField">
+          <label>Status</label>
+          <select id="userFormStatus" class="formSelect"><option>active</option><option>disabled</option></select>
+        </div>
+        <div class="formHint" id="userFormNote">User must be unique. Password and confirm pass must match.</div>
+        <div class="formActions">
+          <button class="button secondary sm" onclick="hideUserModal()">Cancel</button>
+          <button class="button primary sm" onclick="saveUserDraft()">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const cases = [
+  { id: '29066901', user: 'noc01', role: 'noc', page: 'NOC', createdDate: '2026-06-29', created: '10:20', updated: '10:32', closed: '', status: 'in_progress', summary: '', detail: '', messages: [
+    { role: 'user', kind: 'message', time: '10:20', content: 'ลูกค้าแจ้งว่า VM เข้าไม่ได้หลัง maintenance window' },
+    { role: 'assistant', kind: 'message', time: '10:21', content: 'เรียน ผู้ใช้บริการ\nขอรับข้อมูลชื่อ VM และช่วงเวลาที่เริ่มพบปัญหาเพิ่มเติมครับ' },
+    { role: 'assistant', kind: 'draft', time: '10:25', content: 'Draft ready:\nเรียน ผู้ใช้บริการ ทีมงานอยู่ระหว่างตรวจสอบสถานะ VM และ network path เพิ่มเติมครับ' }
+  ]},
+  { id: '29066902', user: 'op01', role: 'operation', page: 'Operation', createdDate: '2026-06-29', created: '11:00', updated: '11:30', closed: '11:30', status: 'closed', summary: 'High CPU on compute node cn-east-04 caused by orphaned qemu process.', detail: 'Identified the stale process from a deleted VM, terminated it, and verified CPU returned to normal.', messages: [
+    { role: 'user', kind: 'message', time: '11:00', content: 'ช่วยดู compute node cn-east-04 CPU สูงผิดปกติ' },
+    { role: 'assistant', kind: 'message', time: '11:05', content: 'พบ qemu-kvm process ใช้ CPU สูงและไม่มี active VM mapping แล้วครับ' },
+    { role: 'assistant', kind: 'message', time: '11:28', content: 'ดำเนินการ terminate stale process และตรวจสอบ utilization กลับมาปกติแล้วครับ' }
+  ]},
+  { id: '29066903', user: 'noc01', role: 'noc', page: 'NOC', createdDate: '2026-06-29', created: '13:12', updated: '13:18', closed: '', status: 'in_progress', summary: '', detail: '', messages: [
+    { role: 'user', kind: 'message', time: '13:12', content: 'ลูกค้าถามเรื่อง invoice เดือนนี้ยอดสูงผิดปกติ' },
+    { role: 'assistant', kind: 'message', time: '13:14', content: 'เรียน ผู้ใช้บริการ\nขอทราบ account ID และ billing period ที่ต้องการให้ตรวจสอบครับ' }
+  ]},
+  { id: '28066901', user: 'admin', role: 'admin', page: 'NOC', createdDate: '2026-06-28', created: '09:15', updated: '09:45', closed: '09:45', status: 'closed', summary: 'API credential expired and customer could not authenticate.', detail: 'Regenerated credential, shared updated token through approved channel, and confirmed access restored.', messages: [
+    { role: 'user', kind: 'message', time: '09:15', content: 'ลูกค้า API login ไม่ผ่าน ได้ 401' },
+    { role: 'assistant', kind: 'message', time: '09:20', content: 'ตรวจสอบพบ credential หมดอายุ จะแนะนำขั้นตอน regenerate ให้ครับ' }
+  ]},
+  { id: '28066902', user: 'op01', role: 'operation', page: 'Operation', createdDate: '2026-06-28', created: '15:02', updated: '15:40', closed: '15:40', status: 'closed', summary: 'Neutron agent on net-node-02 was down.', detail: 'Restarted neutron-linuxbridge-agent and verified service registration plus instance connectivity.', messages: [
+    { role: 'user', kind: 'message', time: '15:02', content: 'network node มี agent down ช่วยเช็ค' },
+    { role: 'assistant', kind: 'message', time: '15:10', content: 'พบ neutron-linuxbridge-agent inactive และ service กลับมาหลัง restart แล้วครับ' }
+  ]}
+];
+
+const users = [
+  { user: 'admin', role: 'admin', status: 'active' },
+  { user: 'noc01', role: 'noc', status: 'active' },
+  { user: 'op01', role: 'operation', status: 'disabled' }
+];
+
+let editingUser = null;
+
+let visibleCount = 20;
+const pageSize = 20;
+
+function getFilteredCases() {
+  const from = document.getElementById('fromDate').value;
+  const to = document.getElementById('toDate').value;
+  const pageVal = document.getElementById('pageFilter').value;
+  const status = document.getElementById('statusFilter').value;
+  const search = document.getElementById('caseSearch').value.trim();
+  return cases.filter((item) => {
+    if (from && item.createdDate < from) return false;
+    if (to && item.createdDate > to) return false;
+    if (pageVal && item.page !== pageVal) return false;
+    if (status && item.status !== status) return false;
+    if (search && !item.id.includes(search)) return false;
+    return true;
+  });
+}
+
+function renderCases(resetPagination) {
+  if (resetPagination) visibleCount = pageSize;
+  const filtered = getFilteredCases();
+  const visible = filtered.slice(0, visibleCount);
+  const body = document.getElementById('caseTableBody');
+  document.getElementById('caseCount').textContent = filtered.length + ' case' + (filtered.length === 1 ? '' : 's');
+  const loadBtn = document.getElementById('loadMoreBtn');
+  loadBtn.style.display = visibleCount < filtered.length ? '' : 'none';
+  if (filtered.length === 0) {
+    body.innerHTML = '<tr><td colspan="8"><div class="emptyState">No cases found</div></td></tr>';
+    return;
+  }
+  body.innerHTML = visible.map((item) => {
+    const statusLabel = item.status === 'closed' ? 'Closed' : 'In Progress';
+    const statusClass = item.status === 'closed' ? 'badgeSuccess' : 'badgeWarning';
+    const roleClass = item.role === 'admin' ? 'badgeDefault' : item.role === 'noc' ? 'badgeInfo' : 'badgeDefault';
+    const pageClass = item.page === 'NOC' ? 'badgeInfo' : 'badgeDefault';
+    return '<tr>' +
+      '<td><span class="caseId">' + item.id + '</span></td>' +
+      '<td>' + item.user + '</td>' +
+      '<td><span class="badge ' + roleClass + '">' + item.role + '</span></td>' +
+      '<td><span class="badge ' + pageClass + '">' + item.page + '</span></td>' +
+      '<td>' + item.created + '</td>' +
+      '<td>' + item.updated + '</td>' +
+      '<td><span class="badge ' + statusClass + '">' + statusLabel + '</span></td>' +
+      '<td class="actionsCell"><button class="button secondary sm" onclick="showCaseModal(\'' + item.id + '\')">View</button></td>' +
+      '</tr>';
+  }).join('');
+}
+
+function loadMoreCases() {
+  visibleCount += pageSize;
+  renderCases(false);
+}
+
+function renderUsers() {
+  const body = document.getElementById('userTableBody');
+  body.innerHTML = users.map((item) => {
+    const statusLabel = item.status === 'active' ? 'Active' : 'Disabled';
+    const statusClass = item.status === 'active' ? 'badgeSuccess' : 'badgeDefault';
+    return '<tr>' +
+      '<td><span class="userName">' + item.user + '</span></td>' +
+      '<td><span class="badge badgeInfo">' + item.role + '</span></td>' +
+      '<td><span class="badge ' + statusClass + '">' + statusLabel + '</span></td>' +
+      '<td><div class="actionBtns"><button class="button secondary sm" onclick="showUserModal(\'edit\', \'' + item.user + '\')">Edit</button><button class="button danger sm" onclick="deleteUserDraft(\'' + item.user + '\')">Delete</button></div></td>' +
+      '</tr>';
+  }).join('');
+}
+
+function showUserModal(mode, username) {
+  editingUser = mode === 'edit' ? username : null;
+  const isEdit = mode === 'edit';
+  const user = isEdit ? users.find((item) => item.user === username) : null;
+  document.getElementById('userModalTitle').textContent = isEdit ? 'Edit User' : 'Add User';
+  document.getElementById('userModalHint').textContent = isEdit ? 'Username is locked while editing.' : 'Create a new user account draft.';
+  document.getElementById('userFormName').value = user ? user.user : '';
+  document.getElementById('userFormName').disabled = isEdit;
+  document.getElementById('userFormPassword').value = '';
+  document.getElementById('userFormConfirm').value = '';
+  document.getElementById('userFormRole').value = user ? user.role : 'noc';
+  document.getElementById('userFormStatus').value = user ? user.status : 'active';
+  document.getElementById('userFormNote').textContent = isEdit ? 'Leave password blank to keep the current password.' : 'User must be unique. Password and confirm pass must match.';
+  document.getElementById('userModalOverlay').classList.add('open');
+}
+
+function hideUserModal() {
+  document.getElementById('userModalOverlay').classList.remove('open');
+}
+
+function closeUserModal(event) {
+  if (event.target.id === 'userModalOverlay') hideUserModal();
+}
+
+function saveUserDraft() {
+  const username = document.getElementById('userFormName').value.trim();
+  const password = document.getElementById('userFormPassword').value;
+  const confirm = document.getElementById('userFormConfirm').value;
+  if (!username) {
+    alert('User is required.');
+    return;
+  }
+  if (!editingUser && users.some((item) => item.user === username)) {
+    alert('User must be unique.');
+    return;
+  }
+  if (password !== confirm) {
+    alert('Password and confirm pass must match.');
+    return;
+  }
+  alert(editingUser ? 'Mock save: user updated.' : 'Mock save: user added.');
+  hideUserModal();
+}
+
+function deleteUserDraft(username) {
+  alert('Mock delete: ' + username);
+}
+
+function showCaseModal(caseId) {
+  const item = cases.find((c) => c.id === caseId);
+  if (!item) return;
+  document.getElementById('modalTitle').textContent = 'Case ' + item.id;
+  const statusLabel = item.status === 'closed' ? 'Closed' : 'In Progress';
+  document.getElementById('modalMeta').innerHTML =
+    '<span class="badge ' + (item.page === 'NOC' ? 'badgeInfo' : 'badgeDefault') + '">' + item.page + '</span>' +
+    '<span class="badge ' + (item.status === 'closed' ? 'badgeSuccess' : 'badgeWarning') + '">' + statusLabel + '</span>' +
+    '<span>User: ' + item.user + '</span>' +
+    '<span>Role: ' + item.role + '</span>' +
+    '<span>Created: ' + item.createdDate + ' ' + item.created + '</span>' +
+    '<span>Updated: ' + item.updated + '</span>' +
+    (item.closed ? '<span>Closed: ' + item.closed + '</span>' : '');
+  const summaryPanel = document.getElementById('summaryPanel');
+  if (item.status === 'closed') {
+    summaryPanel.classList.add('show');
+    document.getElementById('modalSummary').textContent = item.summary;
+    document.getElementById('modalDetail').textContent = item.detail;
+  } else {
+    summaryPanel.classList.remove('show');
+  }
+  document.getElementById('modalMessages').innerHTML = item.messages.map((message) => {
+    if (message.kind === 'draft') {
+      return '<div class="draftCard">' + escapeHtml(message.content) + '<span class="messageTime">' + message.time + '</span></div>';
     }
+    const cls = message.role === 'user' ? 'userBubble' : 'assistantBubble';
+    return '<div class="messageBubble ' + cls + '">' + escapeHtml(message.content) + '<span class="messageTime">' + message.time + '</span></div>';
+  }).join('');
+  document.getElementById('caseModalOverlay').classList.add('open');
+}
 
-    function toggleTheme() {
-      const html = document.documentElement;
-      const current = html.getAttribute('data-theme');
-      html.setAttribute('data-theme', current === 'light' ? 'dark' : 'light');
-    }
+function hideCaseModal() {
+  document.getElementById('caseModalOverlay').classList.remove('open');
+}
 
-    document.querySelectorAll('input[type="range"]').forEach(slider => {
-      slider.addEventListener('input', function() {
-        const val = (parseInt(this.value) / 100).toFixed(2);
-        const label = this.closest('.settingsField').querySelector('.settingsLabelRight');
-        if (label) label.textContent = val;
-      });
-    });
-  </script>
+function closeCaseModal(event) {
+  if (event.target.id === 'caseModalOverlay') hideCaseModal();
+}
+
+function exportMarkdown() {
+  const rows = getFilteredCases();
+  if (rows.length === 0) {
+    alert('No cases found. No file generated.');
+    return;
+  }
+  const from = document.getElementById('fromDate').value;
+  const to = document.getElementById('toDate').value;
+  const filename = from === to ? 'case-history-' + from + '.md' : 'case-history-' + from + '-to-' + to + '.md';
+  alert('Mock export: ' + filename + '\n' + rows.length + ' case(s) will be included with chat history.');
+}
+
+function switchPage(page) {
+  document.querySelectorAll('.page').forEach((item) => item.classList.remove('active'));
+  document.querySelectorAll('.navItem').forEach((item) => item.classList.remove('active'));
+  const pages = { noc: 'nocPage', operation: 'operationPage', history: 'historyPage', settings: 'settingsPage' };
+  const indexes = { noc: 0, operation: 1, history: 2, settings: 3 };
+  document.getElementById(pages[page]).classList.add('active');
+  document.querySelectorAll('.navItem')[indexes[page]].classList.add('active');
+}
+
+function toggleTheme() {
+  const html = document.documentElement;
+  html.setAttribute('data-theme', html.getAttribute('data-theme') === 'light' ? 'dark' : 'light');
+}
+
+function updateSlider(labelId, input) {
+  document.getElementById(labelId).textContent = (parseInt(input.value, 10) / 100).toFixed(2);
+}
+
+function toggleAdvanced(panelId, button) {
+  const panel = document.getElementById(panelId);
+  const isOpen = panel.classList.toggle('open');
+  button.textContent = isOpen ? 'Advanced ▾' : 'Advanced ▸';
+}
+
+function showSaveMsg() {
+  const msg = document.getElementById('saveMsg');
+  msg.classList.add('show');
+  setTimeout(() => msg.classList.remove('show'), 2000);
+}
+
+function escapeHtml(value) {
+  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+}
+
+function loginMock() {
+  const username = document.getElementById('loginUsername').value.trim();
+  const password = document.getElementById('loginPassword').value.trim();
+  if (!username || !password) {
+    var err = document.getElementById('loginError');
+    err.textContent = 'Username and password are required.';
+    err.classList.add('show');
+    return;
+  }
+  var user = users.find(function(u) { return u.user === username; });
+  if (!user) {
+    var err = document.getElementById('loginError');
+    err.textContent = 'Invalid username or password.';
+    err.classList.add('show');
+    return;
+  }
+  if (user.status === 'disabled') {
+    var err = document.getElementById('loginError');
+    err.textContent = 'This user is disabled.';
+    err.classList.add('show');
+    return;
+  }
+  document.getElementById('loginPage').classList.add('hidden');
+  document.querySelector('.layout').classList.add('authenticated');
+}
+
+renderCases(true);
+renderUsers();
+</script>
 </body>
 </html>

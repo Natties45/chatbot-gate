@@ -3,7 +3,7 @@ import { opencodeService } from '@/lib/opencode-service';
 import fs from 'fs/promises';
 import path from 'path';
 
-const PROMPT_DIR = path.join(process.cwd(), '..', '..', 'gate-answer', 'prompts');
+const PROMPT_DIR = path.join(process.cwd(), 'gate-answer', 'prompts');
 
 const AGENT_MAP: Record<string, string> = {
   analyze: 'noc-agent',

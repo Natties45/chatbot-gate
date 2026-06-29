@@ -4,7 +4,7 @@ import fs from 'fs/promises';
 import path from 'path';
 
 const OP_AGENT = 'operation-agent';
-const PROMPT_DIR = path.join(process.cwd(), '..', '..', 'gate-answer', 'prompts');
+const PROMPT_DIR = path.join(process.cwd(), 'gate-answer', 'prompts');
 
 export async function POST(req: NextRequest) {
   try {

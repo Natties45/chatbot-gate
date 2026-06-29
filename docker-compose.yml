@@ -13,7 +13,7 @@ services:
   web1:
     build:
       context: .
-      dockerfile: Dockerfile.web1
+      dockerfile: apps/web1/Dockerfile
       target: prod
     environment:
       - OPENCODE_SERVER_URL=http://opencode:4096

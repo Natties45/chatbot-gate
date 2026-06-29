@@ -13,11 +13,12 @@ Full design: [docs/architecture.md](docs/architecture.md)
 ## Project Layout
 
 ```
-gate-answer/          ← Agent/prompt definitions (source of truth)
 apps/web1/            ← Current app (MVP, no login)
-apps/web/             ← Deprecated (old auth-driven UI)
-adr/                  ← Architecture Decision Records
+apps/web1/gate-answer/ ← Agent/prompt definitions
+agents/               ← Project governance agents
 docs/                 ← Documentation
+docs/adr/             ← Architecture Decision Records
+skills/               ← Project skills
 mcp/                  ← MCP tool catalog + profiles
 ```
 
@@ -69,18 +70,19 @@ Deployment steps: [docs/deployment-checklist.md](docs/deployment-checklist.md)
 
 | File | Description |
 |------|-------------|
+| `docs/overview.md` | Current app state (always latest version) |
 | `docs/architecture.md` | Full architecture, data flow, deployment |
 | `docs/server-inventory.md` | Production server details (single source of truth) |
 | `docs/deployment-checklist.md` | Deploy steps + troubleshooting |
 | `docs/changelog.md` | Development log |
-| `adr/ADR-*.md` | Architecture Decision Records |
-| `gate-answer/agents/*.md` | Agent system prompts |
-| `gate-answer/prompts/*.md` | Action prompt templates |
+| `docs/adr/` | Architecture Decision Records |
+| `apps/web1/gate-answer/agents/*.md` | Agent system prompts |
+| `apps/web1/gate-answer/prompts/*.md` | Action prompt templates |
 | `AGENTS.md` | AI agent rules and conventions |
 
 ## Key Decisions
 
 - **opencode** is a standalone local binary (MIT), NOT a cloud API
 - **web1** is the current MVP — no auth, localStorage for cases
-- **Prompt templates** live in `gate-answer/`, separate from app code
+- **Prompt templates** live in `apps/web1/gate-answer/`, inside the app directory
 - **Playwright MCP** is the standard browser testing tool

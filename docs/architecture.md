@@ -45,7 +45,7 @@ Host-level resources:
 Browser (User)
      │
      ▼
-Next.js App (container, :4568)    ← hot reload
+Next.js App (container, :4568)    ← hot reload, gate-answer mounted as volume
      │
      ├──  HTTP REST
      │   opencode serve (host, :4096)    ← runs on Windows host
@@ -68,14 +68,14 @@ Next.js App (container, :4568)    ← hot reload
 ### Data flow details
 
 ```
-Frontend (next/noc/page.tsx)
+Frontend (apps/web1/src/app/noc/page.tsx)
   │
   ▼  fetch POST /api/chat/noc
   │
   ▼
 API Route (apps/web1/src/app/api/chat/noc/route.ts)
   │
-  ├── 1. Load prompt file from gate-answer/prompts/noc-{promptType}.md
+  ├── 1. Load prompt file from apps/web1/gate-answer/prompts/noc-{promptType}.md
   ├── 2. Interpolate {{MESSAGE}}, {{FEEDBACK}}, {{SESSION_ID}}
   ├── 3. Optionally prepend session history
   └── 4. Call opencodeService.sendSystemMessage(sessionId, agent, systemPrompt, userText)
@@ -86,7 +86,7 @@ API Route (apps/web1/src/app/api/chat/noc/route.ts)
       Opencode binary
         │
         ├── Routes to configured agent (noc-agent / operation-agent / noc-closer)
-        ├── Appends system prompt from gate-answer/agents/*.md
+        ├── Appends system prompt from apps/web1/gate-answer/agents/*.md
         └── Calls LLM provider
 ```
 
@@ -96,75 +96,83 @@ API Route (apps/web1/src/app/api/chat/noc/route.ts)
 
 ```
 chatbot-gate/
-├── AGENTS.md                           ← Central agent rules
+├── AGENTS.md                           ← Central project governance rules
 ├── README.md
 ├── package.json                        ← npm workspaces (apps/*, packages/*)
 ├── tsconfig.json
 │
-├── gate-answer/                        ← Agent & prompt definitions (tool-agnostic)
-│   ├── agents/                         ← System prompts (YAML frontmatter)
-│   │   ├── noc-agent.md
-│   │   ├── noc-closer.md
-│   │   └── operation-agent.md
-│   ├── prompts/                        ← Action-specific prompt templates
-│   │   ├── noc-analyze.md
-│   │   ├── noc-chat.md
-│   │   ├── noc-close.md
-│   │   ├── noc-draft.md
-│   │   ├── noc-draft-feedback.md
-│   │   ├── noc-email.md
-│   │   ├── noc-escalate.md
-│   │   ├── noc-feedback.md
-│   │   └── op-send.md
-│   └── templates/                      ← Case log templates
-│       ├── case-log.md
-│       └── op-case-log.md
+├── agents/                             ← Project governance agents
+│   ├── vivi-researcher.md
+│   ├── cid-architect.md
+│   ├── zidane-builder.md
+│   └── steiner-deployer.md
 │
-├── .opencode/
-│   └── opencode.json                   ← Runtime adapter (agent routing, permissions)
+├── skills/
+│   └── docker-deploy/SKILL.md          ← Deployment skill (used by steiner-deployer)
 │
 ├── apps/
-│   ├── web1/                           ← CURRENT MVP (no login, localStorage)
-│   │   ├── src/
-│   │   │   ├── app/
-│   │   │   │   ├── page.tsx            → redirect to /noc
-│   │   │   │   ├── globals.css
-│   │   │   │   ├── layout.tsx
-│   │   │   │   ├── noc/page.tsx        ← NOC Chat (hybrid state machine)
-│   │   │   │   ├── operation/page.tsx  ← Operation Chat
-│   │   │   │   └── api/chat/
-│   │   │   │       ├── noc/route.ts
-│   │   │   │       └── operation/route.ts
-│   │   │   ├── components/
-│   │   │   │   ├── ThemeProvider.tsx
-│   │   │   │   ├── layout/AppLayout/
-│   │   │   │   ├── layout/Sidebar/
-│   │   │   │   └── ui/{Button,Card,Badge,Input,Table}/
-│   │   │   └── lib/
-│   │   │       ├── opencode-service.ts ← HTTP client for opencode API
-│   │   │       └── case-store.ts        ← localStorage persistence
-│   │   └── package.json
-│   │
-│   └── web/                            ← DEPRECATED (auth-driven, wrong AI integration)
+│   └── web1/                           ← ACTIVE app (MVP, no login, localStorage)
+│       ├── AGENTS.md                   ← App-specific agent rules
+│       ├── opencode.json               ← Runtime agent config (noc, operation)
+│       ├── gate-answer/                ← Agent & prompt definitions
+│       │   ├── agents/                 ← System prompts (YAML frontmatter)
+│       │   │   ├── noc-agent.md
+│       │   │   ├── noc-closer.md
+│       │   │   └── operation-agent.md
+│       │   ├── prompts/                ← Action-specific prompt templates
+│       │   │   ├── noc-analyze.md
+│       │   │   ├── noc-chat.md
+│       │   │   ├── noc-close.md
+│       │   │   ├── noc-draft.md
+│       │   │   ├── noc-draft-feedback.md
+│       │   │   ├── noc-email.md
+│       │   │   ├── noc-escalate.md
+│       │   │   ├── noc-feedback.md
+│       │   │   └── op-send.md
+│       │   └── templates/              ← Case log templates
+│       │       ├── case-log.md
+│       │       └── op-case-log.md
+│       ├── src/
+│       │   ├── app/
+│       │   │   ├── page.tsx            → redirect to /noc
+│       │   │   ├── globals.css
+│       │   │   ├── layout.tsx
+│       │   │   ├── noc/page.tsx        ← NOC Chat (hybrid state machine)
+│       │   │   ├── operation/page.tsx  ← Operation Chat
+│       │   │   └── api/chat/
+│       │   │       ├── noc/route.ts
+│       │   │       └── operation/route.ts
+│       │   ├── components/
+│       │   │   ├── ThemeProvider.tsx
+│       │   │   ├── layout/AppLayout/
+│       │   │   ├── layout/Sidebar/
+│       │   │   └── ui/{Button,Card,Badge,Input,Table}/
+│       │   └── lib/
+│       │       ├── opencode-service.ts ← HTTP client for opencode API
+│       │       └── case-store.ts        ← localStorage persistence
+│       ├── Dockerfile                  ← Next.js build
+│       ├── .env.example
+│       ├── .env.production.example
+│       └── package.json
 │
 ├── docs/
+│   ├── overview.md                     ★ Current app state (latest version)
 │   ├── architecture.md                 ← THIS FILE
 │   ├── server-inventory.md             ← Production server details
 │   ├── deployment-checklist.md         ← Deploy steps + troubleshooting
-│   ├── build-history-2026-06-28-deploy.md ← Production deployment log
-│   ├── build-history-2026-06-28.md     ← Docker setup log
 │   ├── changelog.md                    ← Development log
-│   ├── production-pilot-log-2026-06-27.md
-│   ├── production-test-log-2026-06-27.md
+│   ├── source-of-truth.md
+│   ├── adr/                            ← Architecture Decision Records
+│   │   ├── ADR-0001-opencode-as-bridge.md
+│   │   ├── ADR-0002-web1-mvp-no-auth.md
+│   │   └── ADR-0003-playwright-mcp-testing.md
 │   └── versions/                       ← Version planning + mockups
-│       └── 1.0.0/
+│       ├── 1.0.0/
+│       │   ├── plan.md
+│       │   └── mockup.html
+│       └── 1.10/
 │           ├── plan.md
 │           └── mockup.html
-│
-├── adr/                                ← Architecture Decision Records
-│   ├── ADR-0001-opencode-as-bridge.md
-│   ├── ADR-0002-web1-mvp-no-auth.md
-│   └── ADR-0003-playwright-mcp-testing.md
 │
 ├── mcp/                                ← MCP tool catalog + profiles
 │   ├── catalog/
@@ -176,19 +184,12 @@ chatbot-gate/
 │       ├── package.json
 │       └── server.mjs
 │
-├── governance/
-│   └── source-of-truth.md
-│
-├── agents/                             ← Project governance agents
-│   ├── cid-architect.md
-│   └── vivi-researcher.md
-│
 ├── packages/
 │   └── shared/                         ← Shared types (minimal)
 │
 ├── docker-compose.yml                  ← Production (Linux)
 ├── docker-compose.dev.yml              ← Development (Windows Docker Desktop)
-├── Dockerfile.web1                     ← Next.js build
+├── Dockerfile.opencode                 ← opencode container
 ├── Dockerfile.mcp                      ← Playwright MCP container
 ├── Dockerfile.docker-mcp               ← Docker MCP server
 ├── nginx.conf                          ← Reverse proxy config
@@ -198,11 +199,11 @@ chatbot-gate/
 
 ---
 
-## 4. gate-answer/ — Agent & Prompt Definitions
+## 4. gate-answer/ — Agent & Prompt Definitions (apps/web1/gate-answer/)
 
 ### 4.1 Agents
 
-Each role (NOC, Operation) has a dedicated agent in `gate-answer/agents/`. Agents are **markdown files with YAML frontmatter**.
+Each role (NOC, Operation) has a dedicated agent in `apps/web1/gate-answer/agents/`. Agents are **markdown files with YAML frontmatter**.
 
 | Agent | Role | Temperature | Permissions |
 |-------|------|-------------|-------------|
@@ -212,7 +213,7 @@ Each role (NOC, Operation) has a dedicated agent in `gate-answer/agents/`. Agent
 
 ### 4.2 Prompt Templates
 
-Each **action** has a corresponding prompt template in `gate-answer/prompts/`. Templates wrap user messages before sending to opencode.
+Each **action** has a corresponding prompt template in `apps/web1/gate-answer/prompts/`. Templates wrap user messages before sending to opencode.
 
 #### NOC Prompts
 
@@ -430,7 +431,7 @@ This allows AI agents to:
 |----------|--------|
 | opencode = standalone binary | Not a cloud API; free (MIT), self-hosted |
 | Call opencode HTTP API from Next.js | opencode exposes REST API (OpenAPI 3.1 spec) |
-| Agent definitions in `gate-answer/` | Separates AI prompt logic from app code |
+| Agent definitions in `apps/web1/gate-answer/` | Separates AI prompt logic from app code |
 | Prompt templates per action | Different actions need different wrappers |
 | No login in web1 MVP | Test core AI integration first; auth comes later |
 | localStorage for case store | No DB dependency; sufficient for single-operator |

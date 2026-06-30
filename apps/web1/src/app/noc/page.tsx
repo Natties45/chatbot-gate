@@ -1,11 +1,11 @@
 'use client';
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { AppLayout } from '@/components/layout/AppLayout/AppLayout';
 import { Button } from '@/components/ui/Button/Button';
 import { Plus, Send, Copy, AlertTriangle, RefreshCw } from 'lucide-react';
-import { caseStore, messageStore, extractPreview, type CaseRecord, type StoredMessage } from '@/lib/case-store';
 
-type PageState = 'idle' | 'chat' | 'offline';
+type PageState = 'idle' | 'chat' | 'offline' | 'loading';
 type NocState = 1 | 2 | 3;
 
 interface ChatMessage {
@@ -15,32 +15,75 @@ interface ChatMessage {
   kind: 'message' | 'draft';
 }
 
+interface CaseRecord {
+  id: string;
+  caseId: string;
+  preview: string | null;
+  createdAt: string;
+}
+
 export default function NocPage() {
-  const [pageState, setPageState] = useState<PageState>('idle');
+  const router = useRouter();
+  const [user, setUser] = useState<any>(null);
+  const [pageState, setPageState] = useState<PageState>('loading');
   const [nocState, setNocState] = useState<NocState>(1);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [dbCaseId, setDbCaseId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [error, setError] = useState('');
   const [sending, setSending] = useState(false);
   const [history, setHistory] = useState<CaseRecord[]>([]);
-  const [hasRestoredHistory, setHasRestoredHistory] = useState(false);
   const msgsEnd = useRef<HTMLDivElement>(null);
   const [copied, setCopied] = useState(false);
 
-  const loadHistory = useCallback(() => {
-    setHistory(caseStore.getAll('noc'));
-  }, []);
+  // Authenticate user & load history
+  useEffect(() => {
+    const initPage = async () => {
+      try {
+        const profileRes = await fetch('/api/auth/profile');
+        if (!profileRes.ok) {
+          router.push('/login');
+          return;
+        }
+        const profile = await profileRes.json();
+        if (profile.role !== 'admin' && profile.role !== 'noc') {
+          router.push('/login');
+          return;
+        }
+        setUser(profile);
+        
+        // Load active history
+        await loadHistory();
+        setPageState('idle');
+      } catch (err) {
+        console.error(err);
+        setPageState('offline');
+        setError('Failed to authenticate');
+      }
+    };
+    initPage();
+  }, [router]);
 
-  useEffect(() => { loadHistory(); }, [loadHistory]);
+  const loadHistory = async () => {
+    try {
+      const res = await fetch('/api/cases?status=in_progress&page=NOC');
+      if (!res.ok) throw new Error('Failed to load history');
+      const data = await res.json();
+      setHistory(data.cases || []);
+    } catch (err) {
+      console.error('History load error:', err);
+    }
+  };
+
   useEffect(() => { msgsEnd.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
   function goHome() {
     setPageState('idle');
     setSessionId(null);
+    setDbCaseId(null);
     setMessages([]);
     setNocState(1);
-    setHasRestoredHistory(false);
     setError('');
     setInput('');
     loadHistory();
@@ -48,7 +91,6 @@ export default function NocPage() {
 
   function handleSidebarClick() {
     if (pageState === 'chat' && sessionId) {
-      messageStore.save(sessionId, messages);
       if (confirm('กลับหน้าหลัก? เคสปัจจุบันจะยังอยู่ในประวัติ')) {
         goHome();
       }
@@ -68,23 +110,17 @@ export default function NocPage() {
 
   async function createNewCase() {
     setError('');
-    setPageState('chat');
+    setPageState('loading');
     setMessages([]);
     setNocState(1);
-    setHasRestoredHistory(false);
     setInput('');
     try {
       const data = await apiCall('init');
       setSessionId(data.sessionId);
-      caseStore.add({
-        id: data.sessionId,
-        type: 'noc',
-        preview: '(new case)',
-        createdAt: new Date().toISOString(),
-        status: 'active',
-      });
+      setDbCaseId(data.dbCaseId);
+      setPageState('chat');
     } catch (err: any) {
-      setError(err.message || 'Cannot connect to server');
+      setError(err.message || 'Cannot connect to opencode server');
       setPageState('offline');
     }
   }
@@ -93,6 +129,7 @@ export default function NocPage() {
     if (!input.trim() || !sessionId || sending) return;
     const msg = input.trim();
     setInput('');
+    
     const userMsg: ChatMessage = { id: Date.now().toString(), role: 'user', content: msg, kind: 'message' };
     setMessages((p) => [...p, userMsg]);
 
@@ -100,10 +137,12 @@ export default function NocPage() {
     setSending(true);
     try {
       const extra: Record<string, any> = { promptType, message: msg };
-      if (hasRestoredHistory && messages.length > 0) {
+      
+      // Pass history to opencode for context
+      if (messages.length > 0) {
         extra.history = messages.map((m) => ({ role: m.role, content: m.content }));
-        setHasRestoredHistory(false);
       }
+      
       const data = await apiCall('message', extra);
       const aiMsg: ChatMessage = {
         id: (Date.now() + 1).toString(),
@@ -111,15 +150,12 @@ export default function NocPage() {
         content: data.response,
         kind: 'message',
       };
-      const newMessages = [...messages, userMsg, aiMsg];
-      setMessages(newMessages);
+      
+      setMessages((prev) => [...prev, aiMsg]);
 
       if (promptType === 'analyze') {
         setNocState(2);
-        caseStore.update(sessionId, { preview: extractPreview(msg) });
       }
-
-      if (sessionId) messageStore.save(sessionId, newMessages);
     } catch (err: any) {
       setError(err.message);
       setPageState('offline');
@@ -130,21 +166,19 @@ export default function NocPage() {
 
   async function handleDraft() {
     if (nocState < 2 || !sessionId || sending) return;
-    const userMsg: ChatMessage = { id: Date.now().toString(), role: 'user', content: '[ร่างคำตอบ]', kind: 'message' };
-    setMessages((p) => [...p, userMsg]);
+    
     setSending(true);
     try {
       const data = await apiCall('message', { promptType: 'draft', message: 'Draft response based on our analysis' });
       const aiMsg: ChatMessage = {
-        id: (Date.now() + 1).toString(),
+        id: Date.now().toString(),
         role: 'assistant',
         content: data.response,
         kind: 'draft',
       };
-      const newMessages = [...messages, userMsg, aiMsg];
-      setMessages(newMessages);
+      
+      setMessages((p) => [...p, aiMsg]);
       setNocState(3);
-      if (sessionId) messageStore.save(sessionId, newMessages);
     } catch (err: any) {
       setError(err.message);
       setPageState('offline');
@@ -172,58 +206,70 @@ export default function NocPage() {
   function handleUseDraft() {
     if (!confirm('ใช้ร่างนี้และปิดเคส?')) return;
     if (sessionId) {
-      apiCall('close').catch(() => {});
-      caseStore.remove(sessionId);
-      messageStore.remove(sessionId);
+      apiCall('close')
+        .then(() => goHome())
+        .catch((err) => {
+          setError(err.message);
+          setPageState('offline');
+        });
     }
-    goHome();
   }
 
   async function handleCloseCase() {
     if (!confirm('ต้องการปิดเคสนี้?')) return;
     if (sessionId) {
-      try { await apiCall('close'); } catch {}
-      caseStore.remove(sessionId);
-      messageStore.remove(sessionId);
+      setPageState('loading');
+      try {
+        await apiCall('close');
+        goHome();
+      } catch (err: any) {
+        setError(err.message);
+        setPageState('offline');
+      }
     }
-    goHome();
   }
 
   async function handleResume(c: CaseRecord) {
     setError('');
     setInput('');
-    const savedMessages = messageStore.load(c.id);
+    setPageState('loading');
+    
     try {
-      const data = await apiCall('init');
+      // Fetch details and chat logs from DB
+      const res = await fetch(`/api/cases?id=${c.id}`);
+      if (!res.ok) throw new Error('Failed to load case details');
+      
+      const data = await res.json();
       setSessionId(data.sessionId);
-      setMessages(savedMessages as ChatMessage[]);
-      setHasRestoredHistory(savedMessages.length > 0);
+      setDbCaseId(data.id);
+      
+      const mappedMessages = (data.messages || []).map((m: any) => ({
+        id: m.id,
+        role: m.role,
+        content: m.content,
+        kind: m.kind || 'message'
+      }));
+      
+      setMessages(mappedMessages);
 
       let newState: NocState = 1;
-      if (savedMessages.some((m) => m.kind === 'draft')) {
+      if (mappedMessages.some((m: any) => m.kind === 'draft')) {
         newState = 3;
-      } else if (savedMessages.length >= 2) {
+      } else if (mappedMessages.length >= 2) {
         newState = 2;
       }
+      
       setNocState(newState);
       setPageState('chat');
     } catch (err: any) {
-      setError(err.message || 'Cannot connect to server');
+      setError(err.message || 'Cannot resume case');
       setPageState('offline');
-    }
-  }
-
-  function handleSoftDelete(c: CaseRecord) {
-    if (confirm('ลบเคสนี้ออกจากประวัติ?')) {
-      caseStore.softDelete(c.id);
-      messageStore.remove(c.id);
-      loadHistory();
     }
   }
 
   const headerAction = (
     <div style={{ display: 'flex', gap: '8px' }}>
-      <Button variant="primary" size="sm" onClick={createNewCase}>
+      <Button variant="primary" size="sm" onClick={createNewCase} disabled={pageState === 'loading'}>
         <Plus size={16} /> New Case
       </Button>
       {pageState === 'chat' && (
@@ -233,6 +279,17 @@ export default function NocPage() {
       )}
     </div>
   );
+
+  if (pageState === 'loading') {
+    return (
+      <AppLayout title="NOC Chat">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', gap: '12px' }}>
+          <RefreshCw size={24} className="spinner" />
+          <span>Processing request...</span>
+        </div>
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout title="NOC Chat" headerAction={headerAction} onSidebarActiveClick={handleSidebarClick}>
@@ -258,10 +315,9 @@ export default function NocPage() {
                 {history.map((c) => (
                   <div key={c.id} className="historyRow">
                     <span className="historyDate">{new Date(c.createdAt).toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit' })} {new Date(c.createdAt).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}</span>
-                    <span className="historyPreview">{c.preview}</span>
+                    <span className="historyPreview"><strong>[{c.caseId}]</strong> {c.preview || '(ไม่มีเนื้อหา)'}</span>
                     <div className="historyActions">
                       <Button variant="secondary" size="sm" onClick={() => handleResume(c)}>ทำต่อ</Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleSoftDelete(c)} style={{ color: 'var(--danger-color)' }}>ลบ</Button>
                     </div>
                   </div>
                 ))}

@@ -5,6 +5,8 @@ services:
       dockerfile: Dockerfile.opencode
     ports:
       - "4096:4096"
+    environment:
+      - NODE_PATH=/root/.config/opencode/node_modules
     volumes:
       - opencode-data:/home/opencode
       - /root/openstack-support:/root/openstack-support:ro
@@ -17,9 +19,13 @@ services:
       target: prod
     environment:
       - OPENCODE_SERVER_URL=http://opencode:4096
+      - DATABASE_URL=file:/app/apps/web1/data/app.db
       - NODE_ENV=production
     depends_on:
       - opencode
+    volumes:
+      - web1-data:/app/apps/web1/data
+      - /root/openstack-support:/root/openstack-support:rw
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:3000"]
@@ -39,12 +45,6 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
-  playwright-mcp:
-    build:
-      context: .
-      dockerfile: Dockerfile.mcp
-    restart: unless-stopped
-
   docker-mcp:
     build:
       context: .
@@ -58,3 +58,4 @@ services:
 
 volumes:
   opencode-data:
+  web1-data:

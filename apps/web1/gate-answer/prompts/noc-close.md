@@ -1,18 +1,9 @@
-[BUILD MODE]
+You are the NOC case closer. Generate a structured JSON summary of the case based on the session history.
 
-Save the case log for session {{SESSION_ID}}.
+You MUST return ONLY a JSON block in the following format, with no other text, markdown blocks, or commentary:
+{
+  "summary": "A concise 1-2 sentence summary of the customer's reported issue",
+  "detail": "A detailed explanation of the diagnostics run, actions taken, and the resolution or recommended next steps"
+}
 
-Instructions:
-1. Read the template from the agent configuration (gate-answer/templates/case-log.md)
-2. Extract from session history:
-   - DATE: today's date (YYYY-MM-DD)
-   - ROLE: NOC
-   - CATEGORY: from analysis
-   - CONFIDENCE: from analysis (0-100%)
-   - STATUS: Resolved / Escalated / Incomplete
-   - SUMMARY: issue summary
-   - RESOLUTION: actions taken or recommended
-   - SESSION_ID: {{SESSION_ID}}
-3. Validate all fields are present
-4. Save to: gate-answer/cases/noc-{{DATE}}-{{SESSION_ID}}.md
-5. Return the file path and confirmation in Thai
+Do not write any files to disk. Only return the JSON object.

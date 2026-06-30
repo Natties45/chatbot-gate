@@ -125,7 +125,35 @@ Verification:
 
 ---
 
-## Phase 7 — Case Lifecycle DB
+## Phase 7 — Git Sync Settings
+
+- [ ] Add Git Sync panel under Settings
+- [ ] Store `git.repoUrl`, `git.branch`, `git.localPath`, `git.lastSyncAt`, `git.lastCommit`, `git.lastStatus`, `git.lastLog`
+- [ ] Add `GET /api/admin/git-sync/status`
+- [ ] Add `POST /api/admin/git-sync/action`
+- [ ] Support `check_status`
+- [ ] Support `pull_latest` with dirty checkout refusal
+- [ ] Support `force_reset_pull` with `RESET` confirmation
+- [ ] Support `reclone` with `RECLONE` confirmation
+- [ ] Support `change_repo` with temp clone validation before switch
+- [ ] Disable Git Sync buttons while action is running
+- [ ] Show latest 20 log lines after actions
+- [ ] Add admin-only server-side authorization checks
+- [ ] Reject raw command payloads
+
+Verification:
+
+- [ ] Check Status updates branch/commit/status without changing files
+- [ ] Pull Latest succeeds on clean checkout
+- [ ] Pull Latest refuses dirty checkout
+- [ ] Force Reset + Pull requires `RESET`
+- [ ] Re-clone Repo requires `RECLONE`
+- [ ] Change Repo fails safely when URL/branch is invalid
+- [ ] Non-admin cannot access Git Sync UI or API
+
+---
+
+## Phase 8 — Case Lifecycle DB
 
 - [ ] Add case ID generation helper (`DDMMYYNN`)
 - [ ] On New Case, create opencode session
@@ -148,7 +176,7 @@ Verification:
 
 ---
 
-## Phase 8 — Close Flow
+## Phase 9 — Close Flow
 
 - [ ] Update `noc-close.md` to return `{ summary, detail }`
 - [ ] Create `op-close.md`
@@ -167,7 +195,7 @@ Verification:
 
 ---
 
-## Phase 9 — Case History
+## Phase 10 — Case History
 
 - [ ] Add Case History page route
 - [ ] Add table columns: `ID`, `User`, `Role`, `Page`, `Created`, `Updated`, `Status`, `Action`
@@ -190,7 +218,7 @@ Verification:
 
 ---
 
-## Phase 10 — Markdown Export
+## Phase 11 — Markdown Export
 
 - [ ] Add `/api/cases/export`
 - [ ] Export by `createdAt` date range
@@ -213,7 +241,7 @@ Verification:
 
 ---
 
-## Phase 11 — Infra Cleanup
+## Phase 12 — Infra Cleanup
 
 - [ ] Remove `playwright-mcp` from `docker-compose.yml`
 - [ ] Remove `playwright-mcp` from `docker-compose.dev.yml`
@@ -232,7 +260,7 @@ Verification:
 
 ---
 
-## Phase 12 — Final Verification
+## Phase 13 — Final Verification
 
 - [ ] `npm run build` passes in `apps/web1`
 - [ ] Login works
@@ -243,6 +271,7 @@ Verification:
 - [ ] Case History works
 - [ ] Markdown export works
 - [ ] Settings save/load works
+- [ ] Git Sync status/action flow works for admin
 - [ ] Docker stack builds
 - [ ] Production deploy checklist updated after implementation
 

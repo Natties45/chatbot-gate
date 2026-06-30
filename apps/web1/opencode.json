@@ -9,12 +9,7 @@
       "permission": {
         "edit": "deny",
         "bash": "deny",
-        "read": {
-          "/root/openstack-support/**": "allow"
-        },
-        "external_directory": {
-          "/root/openstack-support/**": "allow"
-        }
+        "read": "allow"
       }
     },
     "noc-closer": {
@@ -25,9 +20,7 @@
       "permission": {
         "edit": "allow",
         "bash": "deny",
-        "read": {
-          "gate-answer/templates/**": "allow"
-        }
+        "read": "allow"
       }
     },
     "operation-agent": {
@@ -39,15 +32,10 @@
     }
   },
   "mcp": {
-    "playwright": {
-      "type": "remote",
-      "url": "http://localhost:8931/sse",
-      "enabled": true
-    },
     "docker": {
       "type": "remote",
       "url": "http://localhost:1234/sse",
-      "enabled": true
+      "enabled": false
     }
   }
 }

@@ -1,7 +1,7 @@
 # chatbot-gate — Overview
 
-> Current version: **1.0.0** — deployed to production.
-> Last updated: 2026-06-29
+> Current version: **1.10.0** — deployed locally for testing.
+> Last updated: 2026-06-30
 
 ## What is it?
 
@@ -15,16 +15,16 @@ AI-powered NOC and Operation support tool. A thin web UI wrapper around the [ope
 | Styling | Tailwind CSS v4, lucide-react |
 | AI Bridge | opencode v1.17+ (local binary, MIT) |
 | LLM | opencode.ai/zen free models (big-pickle default) |
-| Database | localStorage only (MVP) |
+| Database | SQLite via Prisma ORM |
 | Proxy | nginx:stable |
-| Container | Docker Compose (5 services) |
+| Container | Docker Compose (4 services) |
 | Server | Ubuntu 24.04 AMD64 — 203.154.16.197 |
 
 ## Apps
 
 | App | Status | Description |
 |-----|--------|-------------|
-| `apps/web1/` | **Active** (v1.0.0) | NOC + Operation chat, no auth, localStorage |
+| `apps/web1/` | **Active** (v1.10.0) | Auth-driven NOC/Operation chat, History, Git Sync |
 | `apps/web/` | Deleted | Old auth-driven UI (deprecated, removed) |
 
 ## Project Agents

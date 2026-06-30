@@ -145,6 +145,12 @@ input[type='range']::-webkit-slider-thumb { -webkit-appearance: none; width: 16p
 .saveBar { display: flex; align-items: center; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color); }
 .saveMsg { font-size: 12px; color: var(--accent-color); opacity: 0; transition: opacity 0.3s; }
 .saveMsg.show { opacity: 1; }
+.gitMetaGrid { display: grid; grid-template-columns: 120px 1fr; gap: 8px 12px; font-size: 13px; margin-bottom: 12px; }
+.gitMetaLabel { color: var(--text-muted); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }
+.gitMetaValue { color: var(--text-color); overflow-wrap: anywhere; }
+.gitActions { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+.gitRepoForm { display: grid; grid-template-columns: 1fr 120px auto; gap: 8px; align-items: end; margin-top: 12px; }
+.gitLog { margin-top: 12px; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-color); color: var(--text-muted); font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 11px; line-height: 1.5; white-space: pre-wrap; max-height: 120px; overflow: auto; }
 .userTablePanel { border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden; }
 .userTablePanel table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .userTablePanel th { text-align: left; padding: 10px 12px; font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; background: var(--panel-bg); border-bottom: 1px solid var(--border-color); }
@@ -306,6 +312,38 @@ input[type='range']::-webkit-slider-thumb { -webkit-appearance: none; width: 16p
 
         <div class="settingsSection">
           <div class="sectionHeaderRow">
+            <div class="settingsSectionLabel">Git Sync</div>
+            <button class="button secondary sm" onclick="runGitAction('check_status')">Check Status</button>
+          </div>
+          <div class="settingsHint" style="margin-bottom:12px">Admin-only sync controls for the configured knowledge base repository. No raw shell command input.</div>
+          <div class="gitMetaGrid">
+            <div class="gitMetaLabel">Repository</div><div class="gitMetaValue" id="gitRepoValue">git@example.com:org/openstack-support.git</div>
+            <div class="gitMetaLabel">Branch</div><div class="gitMetaValue" id="gitBranchValue">main</div>
+            <div class="gitMetaLabel">Local Path</div><div class="gitMetaValue">/root/openstack-support</div>
+            <div class="gitMetaLabel">Status</div><div class="gitMetaValue"><span id="gitStatusBadge" class="badge badgeSuccess">Synced</span></div>
+            <div class="gitMetaLabel">Last Sync</div><div class="gitMetaValue" id="gitLastSync">2026-06-30 11:25</div>
+            <div class="gitMetaLabel">Commit</div><div class="gitMetaValue" id="gitCommit">a1b2c3d Update handoff templates</div>
+          </div>
+          <div class="gitActions">
+            <button class="button primary sm gitActionBtn" onclick="runGitAction('pull_latest')">Pull Latest</button>
+            <button class="button danger sm gitActionBtn" onclick="runGitAction('force_reset_pull')">Force Reset + Pull</button>
+            <button class="button danger sm gitActionBtn" onclick="runGitAction('reclone')">Re-clone Repo</button>
+          </div>
+          <div class="settingsDivider"></div>
+          <div class="settingsGroupTitle">Change Repository</div>
+          <div class="gitRepoForm">
+            <div class="formField"><label>Repo URL</label><input id="gitRepoInput" class="formInput" value="git@example.com:org/openstack-support.git"></div>
+            <div class="formField"><label>Branch</label><input id="gitBranchInput" class="formInput" value="main"></div>
+            <button class="button secondary sm gitActionBtn" onclick="runGitAction('change_repo')">Validate + Change Repo</button>
+          </div>
+          <div class="gitLog" id="gitLog">$ git status --short
+clean working tree
+$ git log -1 --oneline
+a1b2c3d Update handoff templates</div>
+        </div>
+
+        <div class="settingsSection">
+          <div class="sectionHeaderRow">
             <div class="settingsSectionLabel">Account Management</div>
             <button class="button primary sm" onclick="showUserModal('add')">+ Add User</button>
           </div>
@@ -420,6 +458,7 @@ const users = [
 ];
 
 let editingUser = null;
+let gitBusy = false;
 
 let visibleCount = 20;
 const pageSize = 20;
@@ -487,6 +526,60 @@ function renderUsers() {
       '<td><div class="actionBtns"><button class="button secondary sm" onclick="showUserModal(\'edit\', \'' + item.user + '\')">Edit</button><button class="button danger sm" onclick="deleteUserDraft(\'' + item.user + '\')">Delete</button></div></td>' +
       '</tr>';
   }).join('');
+}
+
+function setGitStatus(status, logText) {
+  const badge = document.getElementById('gitStatusBadge');
+  const labels = { synced: 'Synced', dirty: 'Local Changes', syncing: 'Syncing', error: 'Error', not_configured: 'Not Configured' };
+  const classes = { synced: 'badge badgeSuccess', dirty: 'badge badgeWarning', syncing: 'badge badgeInfo', error: 'badge badgeDefault', not_configured: 'badge badgeDefault' };
+  badge.textContent = labels[status] || status;
+  badge.className = classes[status] || 'badge badgeDefault';
+  if (logText) document.getElementById('gitLog').textContent = logText;
+}
+
+function setGitBusy(isBusy) {
+  gitBusy = isBusy;
+  document.querySelectorAll('.gitActionBtn').forEach((btn) => { btn.disabled = isBusy; });
+}
+
+function runGitAction(action) {
+  if (gitBusy) return;
+  if (action === 'force_reset_pull') {
+    const ok = prompt('This removes local changes and untracked files. Type RESET to continue.');
+    if (ok !== 'RESET') return;
+  }
+  if (action === 'reclone') {
+    const ok = prompt('This replaces the local checkout after a successful fresh clone. Type RECLONE to continue.');
+    if (ok !== 'RECLONE') return;
+  }
+  setGitBusy(true);
+  setGitStatus('syncing', '$ git sync action: ' + action + '\nstarting...');
+  setTimeout(() => {
+    if (action === 'change_repo') {
+      const repo = document.getElementById('gitRepoInput').value.trim();
+      const branch = document.getElementById('gitBranchInput').value.trim() || 'main';
+      document.getElementById('gitRepoValue').textContent = repo;
+      document.getElementById('gitBranchValue').textContent = branch;
+      document.getElementById('gitCommit').textContent = 'f4e5d6c Validated repository switch';
+      document.getElementById('gitLastSync').textContent = '2026-06-30 11:42';
+      setGitStatus('synced', '$ git clone --depth 1 <repo> --branch ' + branch + '\nvalidated temp clone\nactive repository switched');
+    } else if (action === 'check_status') {
+      setGitStatus('synced', '$ git status --short\nclean working tree\n$ git log -1 --oneline\na1b2c3d Update handoff templates');
+    } else if (action === 'pull_latest') {
+      document.getElementById('gitCommit').textContent = 'b7c8d9e Pull latest knowledge base updates';
+      document.getElementById('gitLastSync').textContent = '2026-06-30 11:40';
+      setGitStatus('synced', '$ git fetch origin\n$ git pull --ff-only\nAlready up to date.');
+    } else if (action === 'force_reset_pull') {
+      document.getElementById('gitCommit').textContent = 'c9d0e1f Reset to origin/main';
+      document.getElementById('gitLastSync').textContent = '2026-06-30 11:41';
+      setGitStatus('synced', '$ git fetch origin\n$ git reset --hard origin/main\n$ git clean -fd\nreset complete');
+    } else if (action === 'reclone') {
+      document.getElementById('gitCommit').textContent = 'd2e3f4a Fresh clone complete';
+      document.getElementById('gitLastSync').textContent = '2026-06-30 11:41';
+      setGitStatus('synced', '$ git clone <configured-repo>\nfresh checkout ready\nactive repository switched');
+    }
+    setGitBusy(false);
+  }, 700);
 }
 
 function showUserModal(mode, username) {

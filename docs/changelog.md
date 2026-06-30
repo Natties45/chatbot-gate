@@ -5,6 +5,37 @@
 
 ---
 
+## 2026-06-30 — Version 1.10.0 (Database, RBAC, Settings & Git Sync)
+
+### Architecture
+- Integrated **SQLite** via **Prisma ORM** replacing `localStorage` for case storage.
+- Added **Role-based Access Control (RBAC)** using cookie-based sessions.
+- Added a `Settings` admin dashboard to trigger Git synchronization commands.
+- Dropped the `playwright-mcp` service to reduce container overhead (now using 4 services).
+
+### Key Features
+| Feature | Details |
+|---------|---------|
+| Login & Sessions | Added `bcryptjs` password hashing and session management. Default: `admin/admin`. |
+| Role-based Sidebar | Dynamically shows menus based on role (`admin`, `noc`, `operation`). |
+| DB-Backed Case Lifecycle | Chats are saved to `app.db`. Added auto-generate Case ID (`DDMMYYNN`). |
+| History Explorer | Case History pagination with "View details" popup modal. |
+| Markdown Export | Download all case logs within a selected date range as a `.md` file. |
+| Admin Git Sync | Server-side Git pull, hard reset, and re-clone via secure API endpoints. |
+
+### Files Created/Modified
+| File | Action |
+|------|--------|
+| `apps/web1/prisma/schema.prisma` | Created database schema (User, Session, Case, Message, Setting). |
+| `apps/web1/src/lib/auth.ts`, `db.ts`, `case-db.ts` | Created ORM utilities and session verifiers. |
+| `apps/web1/src/app/login/page.tsx` | Created login page UI. |
+| `apps/web1/src/app/settings/page.tsx` | Created settings & Git Sync UI. |
+| `apps/web1/src/app/history/page.tsx` | Created Case History UI. |
+| `apps/web1/src/app/api/auth/` & `users/` | Created authentication APIs. |
+| `apps/web1/src/app/api/chat/noc/route.ts` | Updated to sync messages to DB. |
+| `apps/web1/src/app/api/chat/operation/route.ts` | Updated to sync messages to DB. |
+| `docker-compose.yml`, `Dockerfile` | Removed playwright-mcp, mounted DB volume, added seed command. |
+
 ## 2026-06-28 — Phase 1.2-1 (UI Polish + Resume + File Attach)
 
 ### Issues Fixed

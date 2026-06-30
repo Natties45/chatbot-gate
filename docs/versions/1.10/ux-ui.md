@@ -1,6 +1,6 @@
 # UX/UI Spec — Version 1.10
 
-> Scope: Login, Settings, Account Management, Case History, View modal, Markdown export.
+> Scope: Login, Settings, Git Sync, Account Management, Case History, View modal, Markdown export.
 
 ---
 
@@ -85,6 +85,7 @@ Settings
 │   ├── NOC Agent
 │   ├── Operation Agent
 │   └── NOC Closer Agent
+├── Git Sync
 └── Account Management
 ```
 
@@ -141,6 +142,76 @@ Behavior:
 - Clicking `Advanced ▸` opens only that agent's advanced area.
 - Clicking again collapses it.
 - Save button persists settings.
+
+---
+
+## Git Sync
+
+Git Sync appears below `opencode` and above Account Management. It is admin-only.
+
+Purpose:
+
+- Sync the knowledge base or repo used by runtime agents.
+- Recover from broken local checkout states without SSH access.
+- Change the tracked repo safely when the source repository changes.
+
+Panel layout:
+
+```text
+Git Sync                                      [Check Status]
+Repository  git@example.com:org/openstack-support.git
+Branch      main
+Local Path  /root/openstack-support
+Status      Synced
+Last Sync   2026-06-30 11:25
+Commit      a1b2c3d Update handoff templates
+
+[Pull Latest] [Force Reset + Pull] [Re-clone Repo]
+
+Change Repository
+Repo URL [input]
+Branch   [input]
+[Validate + Change Repo]
+
+Latest Log
+...
+```
+
+Status badges:
+
+| DB value | UI label | Meaning |
+|----------|----------|---------|
+| `synced` | Synced | Local repo matches target branch |
+| `dirty` | Local Changes | Local checkout has modified/untracked files |
+| `syncing` | Syncing | Git action is running |
+| `error` | Error | Last Git action failed |
+| `not_configured` | Not Configured | Repo URL/path is missing |
+
+Allowed actions:
+
+| Action | UI button | Behavior |
+|--------|-----------|----------|
+| `check_status` | Check Status | Read branch, commit, dirty state, latest log |
+| `pull_latest` | Pull Latest | `fetch` then fast-forward pull only; refuse dirty checkout |
+| `force_reset_pull` | Force Reset + Pull | Fetch, hard reset to remote branch, clean untracked files |
+| `reclone` | Re-clone Repo | Clone configured repo into a fresh directory and switch after success |
+| `change_repo` | Validate + Change Repo | Validate new URL/branch by temp clone, then switch active repo |
+
+Destructive confirmation:
+
+- `Force Reset + Pull` opens a confirm modal.
+- User must type `RESET` before running.
+- `Re-clone Repo` opens a confirm modal.
+- User must type `RECLONE` before running.
+- Confirmation text explains local uncommitted files may be removed.
+
+Safety rules:
+
+- Do not provide a free-form command textbox.
+- Disable all Git Sync buttons while an action is running.
+- Show the latest 20 log lines after every action.
+- Show success/error result inline in the panel.
+- Only `admin` users can view or call Git Sync APIs.
 
 ---
 

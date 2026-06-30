@@ -85,6 +85,15 @@ export class OpencodeService {
     const data = await this.safeJson(res);
     return data && typeof data === 'object' && Array.isArray(data.providers) ? data.providers : [];
   }
+
+  async patchConfig(config: any): Promise<void> {
+    const res = await fetch(`${this.baseUrl}/config`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(config),
+    });
+    if (!res.ok) throw new Error(`patchConfig failed: ${res.status}`);
+  }
 }
 
 export const opencodeService = new OpencodeService();

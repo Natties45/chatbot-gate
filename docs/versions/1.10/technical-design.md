@@ -246,6 +246,34 @@ Pagination:
 | `GET` | `/api/settings` | Load settings + opencode config/providers |
 | `PATCH` | `/api/settings` | Save settings and patch opencode config |
 
+### Git Sync
+
+| Method | Route | Purpose |
+|--------|-------|---------|
+| `GET` | `/api/admin/git-sync/status` | Return repo config, branch, commit, dirty state, last log |
+| `POST` | `/api/admin/git-sync/action` | Run an allowlisted Git Sync action |
+
+Action payload:
+
+```json
+{
+  "action": "pull_latest",
+  "repoUrl": "optional for change_repo only",
+  "branch": "optional for change_repo only",
+  "confirm": "RESET or RECLONE for destructive actions"
+}
+```
+
+Allowed action values:
+
+- `check_status`
+- `pull_latest`
+- `force_reset_pull`
+- `reclone`
+- `change_repo`
+
+Do not expose raw shell command execution through the API.
+
 ---
 
 ## Chat API Changes
@@ -313,10 +341,45 @@ Use `Setting` table for app settings:
 | `operation-agent.temperature` | numeric string |
 | `operation-agent.top_p` | numeric string |
 | `noc-closer.temperature` | numeric string |
+| `git.repoUrl` | configured repository URL |
+| `git.branch` | branch to sync, default `main` |
+| `git.localPath` | local checkout path |
+| `git.lastSyncAt` | ISO timestamp of last successful sync |
+| `git.lastCommit` | last known commit hash/message |
+| `git.lastStatus` | `synced`, `dirty`, `syncing`, `error`, `not_configured` |
+| `git.lastLog` | last command output, trimmed to recent lines |
 
 Model selectors use provider/model list from opencode `GET /config/providers`.
 
 Advanced agent config patches opencode with `PATCH /config`.
+
+### Git Sync Execution
+
+Git Sync runs server-side only in the web app container or a helper available to it.
+
+Implementation rules:
+
+- Use a fixed working directory from `git.localPath`; do not accept arbitrary paths from the browser.
+- Validate repo URL and branch before saving `change_repo`.
+- For `change_repo`, clone into a temporary directory first, then switch active path after success.
+- For `pull_latest`, refuse to run when checkout is dirty.
+- For `force_reset_pull`, require `confirm=RESET`.
+- For `reclone`, require `confirm=RECLONE`.
+- Apply a timeout, recommended `120s`.
+- Capture stdout/stderr and store trimmed output in `git.lastLog`.
+- Log the authenticated admin username, action, start/end time, and result.
+
+Command mapping is internal, for example:
+
+| Action | Internal behavior |
+|--------|-------------------|
+| `check_status` | status, branch, commit inspection only |
+| `pull_latest` | fetch + fast-forward pull |
+| `force_reset_pull` | fetch + hard reset to `origin/<branch>` + clean untracked files |
+| `reclone` | fresh clone from configured repo/branch |
+| `change_repo` | temp clone new URL/branch, then update settings |
+
+The UI may describe actions in friendly labels, but it must not display or accept editable shell commands.
 
 ---
 
@@ -349,6 +412,8 @@ Exact path can be adjusted during implementation, but it must be volume-mounted.
 - Do not store plaintext passwords except in docs as seed credential.
 - Cookie must be HTTP-only.
 - Admin-only APIs must check session role.
+- Git Sync APIs are admin-only and must reject raw command payloads.
+- Git Sync must not allow arbitrary local paths from the browser.
 - Disabled users cannot create new sessions.
 - Case History must filter by role for non-admin users.
 

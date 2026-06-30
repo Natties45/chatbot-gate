@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { opencodeService } from '@/lib/opencode-service';
+import { requireAuth } from '@/lib/auth';
+import { createCase, addMessage, getCaseBySessionId, closeCase } from '@/lib/case-db';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -31,6 +33,7 @@ function interpolate(template: string, vars: Record<string, string>): string {
 export async function POST(req: NextRequest) {
   let body: any;
   try {
+    const user = await requireAuth(['admin', 'noc']);
     body = await req.json();
     const { action, message, sessionId, promptType, additionalInfo } = body;
 
@@ -40,8 +43,21 @@ export async function POST(req: NextRequest) {
         if (!health) {
           return NextResponse.json({ error: 'opencode server not reachable' }, { status: 503 });
         }
-        const id = await opencodeService.createSession('NOC Chat');
-        return NextResponse.json({ sessionId: id });
+        
+        const opencodeSessionId = await opencodeService.createSession('NOC Chat');
+        const dbCase = await createCase({
+          userId: user.id,
+          username: user.username,
+          userRole: user.role,
+          page: 'NOC',
+          sessionId: opencodeSessionId,
+        });
+
+        return NextResponse.json({
+          sessionId: opencodeSessionId,
+          dbCaseId: dbCase.id,
+          caseId: dbCase.caseId,
+        });
       }
 
       case 'message': {
@@ -50,6 +66,11 @@ export async function POST(req: NextRequest) {
         }
         if (!promptType || !AGENT_MAP[promptType]) {
           return NextResponse.json({ error: `invalid promptType: ${promptType}` }, { status: 400 });
+        }
+
+        const dbCase = await getCaseBySessionId(sessionId);
+        if (!dbCase) {
+          return NextResponse.json({ error: 'Active case not found for session' }, { status: 404 });
         }
 
         const agent = AGENT_MAP[promptType];
@@ -70,7 +91,24 @@ export async function POST(req: NextRequest) {
 
         const isFeedbackType = promptType === 'feedback' || promptType === 'draft-feedback';
         const userText = isFeedbackType ? (additionalInfo || message || '') : (message || `Process ${promptType} request`);
+
+        // Save user message to database
+        await addMessage({
+          caseId: dbCase.id,
+          role: 'user',
+          content: userText,
+        });
+
         const response = await opencodeService.sendSystemMessage(sessionId, agent, systemPrompt, userText);
+
+        // Save assistant message to database
+        await addMessage({
+          caseId: dbCase.id,
+          role: 'assistant',
+          kind: promptType === 'draft' ? 'draft' : 'message',
+          content: response,
+        });
+
         return NextResponse.json({ response });
       }
 
@@ -78,16 +116,35 @@ export async function POST(req: NextRequest) {
         if (!sessionId) {
           return NextResponse.json({ error: 'sessionId required' }, { status: 400 });
         }
+
+        const dbCase = await getCaseBySessionId(sessionId);
+        if (!dbCase) {
+          return NextResponse.json({ error: 'Active case not found for session' }, { status: 404 });
+        }
+
         const systemPrompt = await loadPromptFile('close');
         const interpolated = interpolate(systemPrompt, { SESSION_ID: sessionId });
-        const summary = await opencodeService.sendSystemMessage(sessionId, 'noc-closer', interpolated, `Close session ${sessionId}`);
-        return NextResponse.json({ summary, sessionId });
+        
+        const aiOutput = await opencodeService.sendSystemMessage(sessionId, 'noc-closer', interpolated, `Close session ${sessionId}`);
+
+        // Update case status to closed in DB & parse JSON output
+        const closed = await closeCase(sessionId, aiOutput);
+
+        return NextResponse.json({
+          success: true,
+          summary: closed.summary,
+          detail: closed.detail,
+          sessionId,
+        });
       }
 
       default:
         return NextResponse.json({ error: `unknown action: ${action}` }, { status: 400 });
     }
   } catch (error: any) {
+    if (error.message === 'Unauthorized' || error.message === 'Forbidden') {
+      return NextResponse.json({ error: error.message }, { status: error.message === 'Unauthorized' ? 401 : 403 });
+    }
     console.error('[NOC API]', error);
     if (error?.code === 'ENOENT') {
       return NextResponse.json({ error: `Prompt file not found: noc-${body?.promptType}.md` }, { status: 404 });

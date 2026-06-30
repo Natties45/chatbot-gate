@@ -2,7 +2,7 @@
 
 > **Status:** Planned
 > **Date:** 2026-06-29
-> **Scope:** Login, user management, per-agent opencode settings, DB-backed case lifecycle, simplified Case History, Markdown export, remove playwright-mcp
+> **Scope:** Login, user management, per-agent opencode settings, Git Sync controls, DB-backed case lifecycle, simplified Case History, Markdown export, remove playwright-mcp
 
 ---
 
@@ -10,6 +10,7 @@
 
 - Add simple login with cookie session and default admin user (`admin` / `admin`)
 - Add real user management under Settings with roles: `admin`, `operation`, `noc`
+- Add admin-only Git Sync controls for the knowledge base/repo used by runtime agents
 - Replace browser-only localStorage case state with SQLite-backed case lifecycle
 - Add Case History with simple columns, modal chat transcript, and Load More pagination
 - Add Markdown export by `createdAt` date range, generated from DB on demand
@@ -57,6 +58,16 @@
 - Operation Agent: Operation Model + Advanced (Temperature, Top P)
 - NOC Closer Agent: Advanced (Temperature only)
 - Advanced controls are collapsed by default per agent
+
+### Git Sync
+
+- Located in Settings below `opencode` and above Account Management
+- Admin-only controls for the configured Git repository
+- Shows repo URL, branch, local path, last sync time, last commit, status, and latest log
+- Allowed actions only: `Check Status`, `Pull Latest`, `Force Reset + Pull`, `Re-clone Repo`, `Change Repo`
+- Browser never sends raw shell commands; backend maps action names to allowlisted Git operations
+- Destructive actions require confirmation (`RESET` or `RECLONE`)
+- Change Repo validates by cloning to a temporary path before switching active repo
 
 ### Case Lifecycle
 
@@ -106,6 +117,8 @@
 | AI close output | `{ summary, detail }` only |
 | AI file writing | Removed from v1.10 close flow |
 | localStorage migration | No migration; start fresh |
+| Git Sync actions | Allowlisted actions only, no raw command input |
+| Git Sync destructive confirm | Type `RESET` or `RECLONE` |
 
 ---
 

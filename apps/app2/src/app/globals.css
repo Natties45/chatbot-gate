@@ -1,0 +1,128 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap');
+:root {
+  --background: #ffffff;
+  --bg-color: #fafafa;
+  --panel-bg: #ffffff;
+  --border-color: #e5e5e5;
+  --text-color: #171717;
+  --text-muted: #737373;
+  --accent-color: #16a34a;
+  --accent-hover: #15803d;
+  --text-on-accent: #ffffff;
+  --danger-color: #ef4444;
+  --danger-hover: #dc2626;
+  --warning-color: #eab308;
+  --primary-color: #1a73e8;
+  --badge-bg: #dbeafe;
+  --badge-text: #1d4ed8;
+  --badge-high: #fee2e2;
+  --badge-high-text: #dc2626;
+  --badge-med: #fef3c7;
+  --badge-med-text: #d97706;
+}
+
+[data-theme='dark'] {
+  --bg-color: #111111;
+  --panel-bg: #1a1a1a;
+  --border-color: #2a2a2a;
+  --text-color: #e5e5e5;
+  --text-muted: #a3a3a3;
+  --accent-color: #4ade80;
+  --accent-hover: #22c55e;
+  --text-on-accent: #111111;
+  --danger-color: #f87171;
+  --danger-hover: #ef4444;
+  --warning-color: #facc15;
+  --primary-color: #60a5fa;
+  --badge-bg: #1e3a5f;
+  --badge-text: #93c5fd;
+  --badge-high: #451a1a;
+  --badge-high-text: #fca5a5;
+  --badge-med: #451a03;
+  --badge-med-text: #fcd34d;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', 'Noto Sans Thai', sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  transition: background-color 0.2s, color 0.2s;
+}
+
+a { color: inherit; text-decoration: none; }
+
+input, textarea, button { font-family: inherit; }
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translateX(-50%) translateY(10px); }
+  15% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  85% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+}
+
+/* History Panel */
+.historyPanel { background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden; flex-shrink: 0; }
+.historyHeader { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid var(--border-color); font-weight: 600; font-size: 13px; }
+.historyTable { max-height: 160px; overflow-y: auto; }
+.historyRow { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid var(--border-color); font-size: 12px; }
+.historyRow:last-child { border-bottom: none; }
+.historyRow:hover { background: var(--bg-color); }
+.historyDate { color: var(--text-muted); margin-right: 10px; white-space: nowrap; }
+.historyPreview { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.historyActions { display: flex; gap: 4px; margin-left: 10px; }
+.historyEmpty { padding: 20px; text-align: center; color: var(--text-muted); font-size: 13px; }
+
+/* Chat Area */
+.chatArea { background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 10px; flex: 1; min-height: 0; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.messageBubble { max-width: 75%; }
+.userBubble { align-self: flex-end; background: var(--accent-color); color: var(--text-on-accent); padding: 10px 14px; border-radius: 14px 14px 4px 14px; font-size: 13px; line-height: 1.5; white-space: pre-wrap; }
+.assistantBubble { align-self: flex-start; background: var(--bg-color); color: var(--text-color); padding: 10px 14px; border-radius: 14px 14px 14px 4px; font-size: 13px; line-height: 1.5; white-space: pre-wrap; }
+
+/* Analysis Mini Card */
+.analysisMiniCard { background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; margin-top: 4px; }
+.analysisBadges { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+.analysisSummary { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; line-height: 1.4; }
+
+/* Quick Action Bar */
+.quickActionBar { display: flex; align-items: center; gap: 6px; padding: 6px 0; flex-wrap: wrap; flex-shrink: 0; }
+.quickActionsLeft { display: flex; gap: 6px; flex: 1; flex-wrap: wrap; }
+
+/* Draft Card */
+.draftCard { background: var(--bg-color); border-left: 3px solid var(--accent-color); border-radius: 4px; padding: 12px; margin-top: 4px; font-size: 12px; line-height: 1.6; white-space: pre-line; }
+
+/* Copy Toast */
+.copyToast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--text-color); color: var(--bg-color); padding: 10px 20px; border-radius: 8px; font-size: 12px; animation: fadeInOut 2s ease forwards; z-index: 200; }
+
+/* Spinner */
+.spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--border-color); border-top-color: var(--accent-color); border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 6px; vertical-align: middle; }
+
+/* File Attach Chip */
+.fileAttachChip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 6px; font-size: 11px; color: var(--text-muted); margin-bottom: 6px; }
+.fileAttachChipName { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fileAttachChipRemove { cursor: pointer; opacity: 0.6; transition: opacity 0.15s; font-size: 14px; line-height: 1; }
+.fileAttachChipRemove:hover { opacity: 1; color: var(--danger-color); }
+
+/* Badges */
+.badge { padding: 3px 8px; border-radius: 16px; font-size: 11px; font-weight: 600; }
+.badgeCategory { background: var(--badge-bg); color: var(--badge-text); }
+.badgeConfidence { background: var(--badge-med); color: var(--badge-med-text); }
+.badgeHigh { background: var(--badge-high); color: var(--badge-high-text); }
+
+/* Confirm Dialog */
+.confirmOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 300; }
+.confirmDialog { background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 24px; min-width: 300px; text-align: center; }
+.confirmDialog h3 { font-size: 16px; margin-bottom: 8px; }
+.confirmDialog p { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; }
+.confirmDialogBtns { display: flex; gap: 10px; justify-content: center; }
+
+code { background: var(--border-color); padding: 2px 5px; border-radius: 3px; font-size: 11px; font-family: 'Consolas', 'Monaco', monospace; }

@@ -1,0 +1,96 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String    @id @default(uuid())
+  username     String    @unique
+  passwordHash String
+  role         String    // admin | operation | noc
+  status       String    // active | disabled
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  sessions     Session[]
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  sessionToken String   @unique
+  userId       String
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Case {
+  id        String        @id @default(uuid())
+  caseId    String        @unique // DDMMYYNN, e.g. 29066901
+  userId    String
+  username  String        // snapshot
+  userRole  String        // snapshot: admin | operation | noc
+  page      String        // NOC | Operation
+  sessionId String
+  status    String        // in_progress | closed
+  preview   String?
+  summary   String?
+  detail    String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  closedAt  DateTime?
+  messages  ChatMessage[]
+  toolCalls ToolCallLog[]
+  llmCalls  LlmCallLog[]
+}
+
+model ChatMessage {
+  id        String   @id @default(uuid())
+  caseId    String
+  role      String   // user | assistant
+  kind      String?  // message | draft | system
+  content   String
+  model     String?
+  provider  String?
+  createdAt DateTime @default(now())
+  case      Case     @relation(fields: [caseId], references: [id], onDelete: Cascade)
+}
+
+model ToolCallLog {
+  id         String   @id @default(uuid())
+  caseId     String
+  messageId  String?
+  serverName String
+  toolName   String
+  inputJson  String?
+  outputText String?
+  status     String   // success | error | denied | timeout
+  latencyMs  Int?
+  createdAt  DateTime @default(now())
+  case       Case     @relation(fields: [caseId], references: [id], onDelete: Cascade)
+}
+
+model LlmCallLog {
+  id           String   @id @default(uuid())
+  caseId       String?
+  provider     String
+  model        String
+  status       String   // success | error | fallback
+  inputTokens  Int?
+  outputTokens Int?
+  latencyMs    Int?
+  errorCode    String?
+  errorMessage String?
+  createdAt    DateTime @default(now())
+  case         Case?    @relation(fields: [caseId], references: [id], onDelete: SetNull)
+}
+
+model Setting {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+}

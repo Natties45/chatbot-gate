@@ -1,0 +1,21 @@
+.sidebar {
+  width: 200px;
+  height: 100vh;
+  background-color: var(--panel-bg);
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 100;
+}
+.header { padding: 16px; border-bottom: 1px solid var(--border-color); }
+.logo { font-weight: 700; font-size: 18px; color: var(--accent-color); letter-spacing: 1px; }
+.nav { flex: 1; padding: 12px 8px; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; }
+.navItem { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 8px; color: var(--text-muted); font-size: 13px; font-weight: 500; transition: all 0.15s; }
+.navItem:hover { background-color: var(--bg-color); }
+.navItem.active { background-color: var(--accent-color); color: var(--text-on-accent); font-weight: 600; }
+.footer { padding: 12px 8px; border-top: 1px solid var(--border-color); }
+.themeToggle { display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 6px; color: var(--text-muted); font-size: 11px; cursor: pointer; opacity: 0.7; transition: all 0.15s; }
+.themeToggle:hover { background-color: var(--bg-color); opacity: 1; }

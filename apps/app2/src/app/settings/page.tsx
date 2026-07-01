@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { AppLayout } from '@/components/layout/AppLayout/AppLayout';
 import { Button } from '@/components/ui/Button/Button';
 import { Settings, GitBranch, Users, LogOut, ChevronDown, ChevronUp, AlertTriangle, Plus, Edit, Trash2 } from 'lucide-react';
+import { apiUrl } from '@/lib/api';
 
 type TabType = 'agents' | 'git' | 'users';
 
@@ -66,7 +67,7 @@ export default function SettingsPage() {
   // Fetch all configurations
   async function fetchSettingsAndConfig() {
     try {
-      const res = await fetch('/api/settings');
+      const res = await fetch(apiUrl('/api/settings'));
       if (!res.ok) {
         if (res.status === 401 || res.status === 403) router.push('/login');
         throw new Error('Failed to load settings');
@@ -90,7 +91,7 @@ export default function SettingsPage() {
 
   async function fetchUsers() {
     try {
-      const res = await fetch('/api/users');
+      const res = await fetch(apiUrl('/api/users'));
       if (res.ok) {
         const data = await res.json();
         setUsers(data);
@@ -102,7 +103,7 @@ export default function SettingsPage() {
 
   async function fetchGitStatus() {
     try {
-      const res = await fetch('/api/admin/git-sync/status');
+      const res = await fetch(apiUrl('/api/admin/git-sync/status'));
       if (res.ok) {
         const data = await res.json();
         setGitStatus(data);
@@ -128,7 +129,7 @@ export default function SettingsPage() {
     setLoading(true);
 
     try {
-      const res = await fetch('/api/settings', {
+      const res = await fetch(apiUrl('/api/settings'), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -168,7 +169,7 @@ export default function SettingsPage() {
         payload.branch = gitBranchInput;
       }
 
-      const res = await fetch('/api/admin/git-sync/action', {
+      const res = await fetch(apiUrl('/api/admin/git-sync/action'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -204,7 +205,7 @@ export default function SettingsPage() {
       let res;
       if (editingUser) {
         // Edit User
-        res = await fetch(`/api/users?id=${editingUser.id}`, {
+        res = await fetch(apiUrl(`/api/users?id=${editingUser.id}`), {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -215,7 +216,7 @@ export default function SettingsPage() {
         });
       } else {
         // Create User
-        res = await fetch('/api/users', {
+        res = await fetch(apiUrl('/api/users'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -261,7 +262,7 @@ export default function SettingsPage() {
     setSuccess('');
 
     try {
-      const res = await fetch(`/api/users?id=${id}`, {
+      const res = await fetch(apiUrl(`/api/users?id=${id}`), {
         method: 'DELETE',
       });
       const data = await res.json();
@@ -277,7 +278,7 @@ export default function SettingsPage() {
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
+      await fetch(apiUrl('/api/auth/logout'), { method: 'POST' });
       router.push('/login');
     } catch (err) {
       console.error(err);

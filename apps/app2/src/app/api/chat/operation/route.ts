@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({ error: 'sessionId required' }, { status: 400 });
         }
 
-        const dbCase = await getCaseBySessionId(sessionId);
+        const dbCase = await getCaseBySessionId(sessionId, user.id, 'Operation');
         if (!dbCase) {
           return NextResponse.json({ error: 'Active case not found for session' }, { status: 404 });
         }
@@ -113,7 +113,7 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({ error: 'sessionId required' }, { status: 400 });
         }
 
-        const dbCase = await getCaseBySessionId(sessionId);
+        const dbCase = await getCaseBySessionId(sessionId, user.id, 'Operation');
         if (!dbCase) {
           return NextResponse.json({ error: 'Active case not found for session' }, { status: 404 });
         }
@@ -138,7 +138,7 @@ export async function POST(req: NextRequest) {
           provider: response.provider,
         });
 
-        const closed = await closeCase(sessionId, response.content);
+        const closed = await closeCase(sessionId, response.content, user.id, 'Operation');
 
         return NextResponse.json({
           success: true,

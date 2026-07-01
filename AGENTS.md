@@ -56,6 +56,16 @@ vivi (research) → cid (architect) → zidane (builder) → steiner (deployer)
 
 ## Build History
 
+### 2026-07-02 — Production deployment (203.154.16.162)
+
+- Deployed App2 (v2.0.0) full stack to production server `203.154.16.162` (AMD64 Ubuntu)
+- **Key details**:
+  - **8 containers**: `opencode`, `web1`, `app2`, `ollama`, `nginx`, `docker-mcp`, `kb-mcp`, `case-history-mcp`
+  - **Multitenancy**: Nginx routes `/app2` to port 3001 (`app2`) and `/` to port 3000 (`web1`)
+  - **Local Fallback**: Preloaded `qwen3:4b` in the `ollama` container
+  - **Verification**: Verified Next.js endpoints, SQLite migrations, database seeding, and chat flow successfully
+- log เต็ม: `walkthrough.md`
+
 ### 2026-06-28 — Production deployment (203.154.16.197)
 
 - Deployed full stack to production server (AMD64 Ubuntu)

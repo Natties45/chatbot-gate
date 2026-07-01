@@ -4,6 +4,17 @@ import { prisma } from '../../../lib/db';
 import { requireAuth, hashPassword } from '../../../lib/auth';
 import { apiErrorResponse } from '../../../lib/api-error';
 
+const ALLOWED_ROLES = ['admin', 'noc', 'operation'];
+const ALLOWED_STATUSES = ['active', 'disabled'];
+
+function validateRole(role: string): boolean {
+  return ALLOWED_ROLES.includes(role);
+}
+
+function validateStatus(status: string): boolean {
+  return ALLOWED_STATUSES.includes(status);
+}
+
 // Helper to filter user properties sent to client
 function sanitizeUser(user: User) {
   return {
@@ -49,6 +60,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (!validateRole(role)) {
+      return NextResponse.json(
+        { error: `Invalid role. Allowed: ${ALLOWED_ROLES.join(', ')}` },
+        { status: 400 }
+      );
+    }
+
+    if (!validateStatus(status)) {
+      return NextResponse.json(
+        { error: `Invalid status. Allowed: ${ALLOWED_STATUSES.join(', ')}` },
+        { status: 400 }
+      );
+    }
+
     // Check if user already exists
     const existing = await prisma.user.findUnique({
       where: { username },
@@ -69,7 +94,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json(sanitizeUser(newUser), { status: 211 });
+    return NextResponse.json(sanitizeUser(newUser), { status: 201 });
   } catch (error) {
     return apiErrorResponse(error, '[Users API POST]');
   }
@@ -91,6 +116,20 @@ export async function PATCH(request: NextRequest) {
       status?: string;
       password?: string;
     };
+
+    if (role && !validateRole(role)) {
+      return NextResponse.json(
+        { error: `Invalid role. Allowed: ${ALLOWED_ROLES.join(', ')}` },
+        { status: 400 }
+      );
+    }
+
+    if (status && !validateStatus(status)) {
+      return NextResponse.json(
+        { error: `Invalid status. Allowed: ${ALLOWED_STATUSES.join(', ')}` },
+        { status: 400 }
+      );
+    }
 
     // Verify user exists
     const existing = await prisma.user.findUnique({

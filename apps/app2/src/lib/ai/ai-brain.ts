@@ -144,6 +144,6 @@ export async function runChatAction(params: RunActionParams): Promise<LlmRespons
     caseId: params.dbCaseId,
     messages,
     fallbackMessages,
-    temperature: 0.2,
+    role: params.role,
   });
 }

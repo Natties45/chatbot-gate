@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { AppLayout } from '@/components/layout/AppLayout/AppLayout';
 import { Button } from '@/components/ui/Button/Button';
 import { Eye, Download, Search, RefreshCw, ChevronDown, Shield, Settings } from 'lucide-react';
+import { apiUrl } from '@/lib/api';
 
 interface ChatMessage {
   id: string;
@@ -57,7 +58,7 @@ export default function HistoryPage() {
     setLoading(true);
     try {
       const cursorParam = !reset && nextCursor ? `&cursor=${nextCursor}` : '';
-      const url = `/api/cases?from=${fromFilter}&to=${toFilter}&page=${pageFilter}&status=${statusFilter}&caseId=${caseIdFilter}${cursorParam}&limit=20`;
+      const url = apiUrl(`/api/cases?from=${fromFilter}&to=${toFilter}&page=${pageFilter}&status=${statusFilter}&caseId=${caseIdFilter}${cursorParam}&limit=20`);
 
       const res = await fetch(url);
       if (!res.ok) {
@@ -98,7 +99,7 @@ export default function HistoryPage() {
     setModalLoading(true);
     setModalOpen(true);
     try {
-      const res = await fetch(`/api/cases?id=${id}`);
+      const res = await fetch(apiUrl(`/api/cases?id=${id}`));
       if (!res.ok) throw new Error('Failed to fetch case details');
       const data = await res.json();
       setSelectedCase(data);
@@ -113,7 +114,7 @@ export default function HistoryPage() {
   const handleExportMarkdown = async () => {
     setExporting(true);
     try {
-      const url = `/api/cases/export?from=${fromFilter}&to=${toFilter}&page=${pageFilter}&status=${statusFilter}&caseId=${caseIdFilter}`;
+      const url = apiUrl(`/api/cases/export?from=${fromFilter}&to=${toFilter}&page=${pageFilter}&status=${statusFilter}&caseId=${caseIdFilter}`);
       
       const res = await fetch(url);
       if (!res.ok) throw new Error('Export failed');

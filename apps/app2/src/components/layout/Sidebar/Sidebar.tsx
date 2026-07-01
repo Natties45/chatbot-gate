@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { Shield, Settings, History, Lock } from 'lucide-react';
+import { apiUrl } from '@/lib/api';
 import styles from './Sidebar.module.css';
 import { useEffect, useState } from 'react';
 
@@ -18,7 +19,7 @@ export function Sidebar({ onActiveClick }: SidebarProps) {
 
   useEffect(() => {
     // Fetch profile to render correct menu items
-    fetch('/api/auth/profile')
+    fetch(apiUrl('/api/auth/profile'))
       .then((res) => {
         if (res.ok) return res.json();
         throw new Error('Not logged in');

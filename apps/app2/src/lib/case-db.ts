@@ -43,17 +43,27 @@ export interface CreateCaseParams {
 
 export async function createCase(params: CreateCaseParams): Promise<Case> {
   const caseId = await generateCaseId();
-  return prisma.case.create({
-    data: {
-      caseId,
-      userId: params.userId,
-      username: params.username,
-      userRole: params.userRole,
-      page: params.page,
-      sessionId: params.sessionId,
-      status: 'in_progress',
+
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      return await prisma.case.create({
+        data: {
+          caseId: attempt === 0 ? caseId : await generateCaseId(),
+          userId: params.userId,
+          username: params.username,
+          userRole: params.userRole,
+          page: params.page,
+          sessionId: params.sessionId,
+          status: 'in_progress',
+        }
+      });
+    } catch (error) {
+      const isUniqueConstraint = typeof error === 'object' && error !== null && 'code' in error && (error as { code: string }).code === 'P2002';
+      if (!isUniqueConstraint || attempt === 2) throw error;
     }
-  });
+  }
+
+  throw new Error('Failed to create case after 3 attempts');
 }
 
 export interface AddMessageParams {
@@ -96,13 +106,14 @@ export async function addMessage(params: AddMessageParams): Promise<ChatMessage>
   return message;
 }
 
-export async function getCaseBySessionId(sessionId: string): Promise<Case | null> {
-  return prisma.case.findFirst({
-    where: { sessionId, status: 'in_progress' }
-  });
+export async function getCaseBySessionId(sessionId: string, userId?: string, page?: string): Promise<Case | null> {
+  const where: Record<string, unknown> = { sessionId, status: 'in_progress' };
+  if (userId) where.userId = userId;
+  if (page) where.page = page;
+  return prisma.case.findFirst({ where });
 }
 
-export async function closeCase(sessionId: string, aiOutput: string): Promise<Case> {
+export async function closeCase(sessionId: string, aiOutput: string, userId?: string, page?: string): Promise<Case> {
   let summary = '';
   let detail = '';
 
@@ -120,9 +131,11 @@ export async function closeCase(sessionId: string, aiOutput: string): Promise<Ca
     detail = aiOutput;
   }
 
-  const existingCase = await prisma.case.findFirst({
-    where: { sessionId, status: 'in_progress' }
-  });
+  const where: Record<string, unknown> = { sessionId, status: 'in_progress' };
+  if (userId) where.userId = userId;
+  if (page) where.page = page;
+
+  const existingCase = await prisma.case.findFirst({ where });
 
   if (!existingCase) {
     throw new Error(`Active case with session ID ${sessionId} not found`);

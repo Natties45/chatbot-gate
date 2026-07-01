@@ -1,0 +1,16 @@
+FROM node:22
+
+# Install dependencies needed for SQLite / native modules compilation if any
+# We use node:22 full image to ensure build-essential is available for better-sqlite3 build
+WORKDIR /app
+
+COPY mcp/servers/case-history-mcp/package*.json ./
+RUN npm install
+
+COPY mcp/servers/case-history-mcp/index.js ./
+
+EXPOSE 4102
+
+ENV PORT=4102
+ENV DATABASE_URL=file:/app/apps/app2/data/app2.db
+CMD ["node", "index.js"]

@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { AppLayout } from '@/components/layout/AppLayout/AppLayout';
 import { Button } from '@/components/ui/Button/Button';
 import { Plus, Send, Copy, AlertTriangle, RefreshCw } from 'lucide-react';
+import { apiUrl } from '@/lib/api';
 
 type PageState = 'idle' | 'chat' | 'offline' | 'loading';
 type NocState = 1 | 2 | 3;
@@ -60,7 +61,7 @@ export default function NocPage() {
 
   async function loadHistory() {
     try {
-      const res = await fetch('/api/cases?status=in_progress&page=NOC');
+      const res = await fetch(apiUrl('/api/cases?status=in_progress&page=NOC'));
       if (!res.ok) throw new Error('Failed to load history');
       const data = await res.json();
       setHistory(data.cases || []);
@@ -73,7 +74,7 @@ export default function NocPage() {
   useEffect(() => {
     const initPage = async () => {
       try {
-        const profileRes = await fetch('/api/auth/profile');
+        const profileRes = await fetch(apiUrl('/api/auth/profile'));
         if (!profileRes.ok) {
           router.push('/login');
           return;
@@ -119,7 +120,7 @@ export default function NocPage() {
   }
 
   async function apiCall(action: string, extra: Record<string, unknown> = {}): Promise<NocChatResponse> {
-    const res = await fetch('/api/chat/noc', {
+    const res = await fetch(apiUrl('/api/chat/noc'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action, sessionId, ...extra }),
@@ -261,7 +262,7 @@ export default function NocPage() {
     
     try {
       // Fetch details and chat logs from DB
-      const res = await fetch(`/api/cases?id=${c.id}`);
+      const res = await fetch(apiUrl(`/api/cases?id=${c.id}`));
       if (!res.ok) throw new Error('Failed to load case details');
       
       const data = await res.json();

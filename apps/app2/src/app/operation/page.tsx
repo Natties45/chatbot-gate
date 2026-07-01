@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { AppLayout } from '@/components/layout/AppLayout/AppLayout';
 import { Button } from '@/components/ui/Button/Button';
 import { Plus, Send, FileText, AlertTriangle, RefreshCw } from 'lucide-react';
+import { apiUrl } from '@/lib/api';
 
 type PageState = 'idle' | 'loading' | 'chat' | 'offline';
 
@@ -64,7 +65,7 @@ function OperationContent() {
 
   async function loadHistory() {
     try {
-      const res = await fetch('/api/cases?status=in_progress&page=Operation');
+      const res = await fetch(apiUrl('/api/cases?status=in_progress&page=Operation'));
       if (!res.ok) throw new Error('Failed to load history');
       const data = await res.json();
       setHistory(data.cases || []);
@@ -80,7 +81,7 @@ function OperationContent() {
     setState('loading');
 
     try {
-      const res = await fetch(`/api/cases?id=${c.id}`);
+      const res = await fetch(apiUrl(`/api/cases?id=${c.id}`));
       if (!res.ok) throw new Error('Failed to load case');
       
       const data = await res.json();
@@ -104,7 +105,7 @@ function OperationContent() {
   async function fetchCaseDetailsBySession(sId: string) {
     setState('loading');
     try {
-      const res = await fetch(`/api/cases?status=in_progress&page=Operation`);
+      const res = await fetch(apiUrl(`/api/cases?status=in_progress&page=Operation`));
       if (!res.ok) throw new Error('Fetch failed');
       const data = await res.json();
       const current = data.cases?.find((c: CaseRecord) => c.sessionId === sId);
@@ -123,7 +124,7 @@ function OperationContent() {
   useEffect(() => {
     const initPage = async () => {
       try {
-        const profileRes = await fetch('/api/auth/profile');
+        const profileRes = await fetch(apiUrl('/api/auth/profile'));
         if (!profileRes.ok) {
           router.push('/login');
           return;
@@ -166,7 +167,7 @@ function OperationContent() {
     setError('');
     
     try {
-      const res = await fetch('/api/chat/operation', {
+      const res = await fetch(apiUrl('/api/chat/operation'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'init' }),
@@ -206,7 +207,7 @@ function OperationContent() {
         body.history = messages.map((m) => ({ role: m.role, content: m.content }));
       }
 
-      const res = await fetch('/api/chat/operation', {
+      const res = await fetch(apiUrl('/api/chat/operation'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -235,7 +236,7 @@ function OperationContent() {
     setSending(true);
     
     try {
-      const res = await fetch('/api/chat/operation', {
+      const res = await fetch(apiUrl('/api/chat/operation'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -264,7 +265,7 @@ function OperationContent() {
     
     setState('loading');
     try {
-      await fetch('/api/chat/operation', {
+      await fetch(apiUrl('/api/chat/operation'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'close', sessionId }),

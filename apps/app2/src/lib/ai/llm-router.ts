@@ -10,6 +10,7 @@ interface RouteLlmParams {
   fallbackMessages?: LlmMessage[];
   temperature?: number;
   maxTokens?: number;
+  role?: string;
 }
 
 const GROQ_TIMEOUT_MS = 60_000;
@@ -97,19 +98,36 @@ function normalizeProvider(value: string | undefined, fallback: LlmProvider): Ll
 
 export async function routeLlm(params: RouteLlmParams): Promise<LlmResponse> {
   const settings = await getSettings();
+
   const primaryProvider = normalizeProvider(settings['llm.primaryProvider'] || process.env.APP2_PRIMARY_PROVIDER, 'groq');
-  const primaryModel = settings['llm.primaryModel'] || process.env.APP2_PRIMARY_MODEL || 'qwen/qwen3-32b';
+  let primaryModel = settings['llm.primaryModel'] || process.env.APP2_PRIMARY_MODEL || 'qwen/qwen3-32b';
   const fallbackProvider = normalizeProvider(settings['llm.fallbackProvider'] || process.env.APP2_FALLBACK_PROVIDER, 'ollama');
   const fallbackModel = settings['llm.fallbackModel'] || process.env.APP2_FALLBACK_MODEL || 'qwen3:4b';
   const fallbackEnabled = parseBoolean(settings['llm.enableFallback'], true);
   const maxTokens = params.maxTokens ?? parseNumber(settings['llm.maxOutputTokens'], 2048);
+
+  // Role-specific overrides
+  const roleKey = params.role || '';
+  if (roleKey) {
+    const roleModel = settings[`${roleKey}.model`];
+    if (roleModel) {
+      primaryModel = roleModel;
+    }
+    // Use role-specific temperature if set
+    const roleTemp = settings[`${roleKey}-agent.temperature`];
+    if (roleTemp) {
+      params.temperature = parseNumber(roleTemp, params.temperature ?? 0.2);
+    }
+  }
+
+  const temperature = params.temperature ?? 0.2;
 
   try {
     const response = await callProvider({
       provider: primaryProvider,
       model: primaryModel,
       messages: params.messages,
-      temperature: params.temperature,
+      temperature,
       maxTokens,
     });
 
@@ -147,7 +165,7 @@ export async function routeLlm(params: RouteLlmParams): Promise<LlmResponse> {
     provider: fallbackProvider,
     model: fallbackModel,
     messages: params.fallbackMessages || params.messages,
-    temperature: params.temperature,
+    temperature,
     maxTokens: Math.min(maxTokens, 1024),
   });
 

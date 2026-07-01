@@ -14,6 +14,7 @@ apps/app2/
 ├── src/app/api/chat/       <- app2 chat API routes
 ├── src/lib/ai/             <- LLM router, providers, AI brain
 ├── src/lib/mcp/            <- MCP gateway and tool policy
+├── src/lib/api.ts          <- API path helper (prepends /app2 basePath)
 └── prisma/                 <- app2 SQLite schema and migrations
 ```
 
@@ -27,6 +28,10 @@ apps/app2/
 - Store API keys only in environment variables or server-side settings.
 - Thai for responses; keep technical terms in English when clearer.
 - Customer-facing NOC drafts must not mention internal providers, APIs, CLI, backend, or internal tools.
+- **BasePath**: app2 serves under `/app2` (set in `next.config.ts`). Use `apiUrl()` from `@/lib/api` for all client-side `fetch()` calls.
+- **Port**: Production container listens on port 3001 (set via `PORT=3001`).
+- **Admin seed**: Uses `APP2_ADMIN_USERNAME` and `APP2_ADMIN_PASSWORD` env vars. Falls back to `admin/admin` in dev only; production requires explicit password.
+- **Case ownership**: Active case lookup now requires `userId` and `page` match to prevent cross-user session access.
 
 ## Verification
 
@@ -37,3 +42,4 @@ npm run prisma:generate
 npm run lint
 npm run build
 ```
+

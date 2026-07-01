@@ -7,8 +7,9 @@ RUN npm install
 COPY . .
 
 FROM base AS prod
-RUN cd apps/app2 && npx prisma generate && npm run build
-EXPOSE 3000
+RUN npm run prisma:generate --workspace=apps/app2 && npm run build --workspace=apps/app2
+EXPOSE 3001
+ENV PORT=3001
 CMD ["sh", "-c", "npm run prisma:migrate --workspace=apps/app2 && npm run db:seed --workspace=apps/app2 && npm run start --workspace=apps/app2"]
 
 FROM base AS dev

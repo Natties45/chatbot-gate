@@ -30,12 +30,18 @@ Docker Compose (5 services)
         └── mount /var/run/docker.sock
 ```
 
-### Production Server (203.154.16.197)
+### Production Servers
 
+#### Server 1 (web1 Pilot)
+- **IP**: `203.154.16.197`
 - **Location**: `/opt/chatbot-gate`
-- **Architecture**: AMD64 (x86_64)
-- **Knowledge Base**: `/root/openstack-support/` (mounted into opencode container)
-- **SSH**: `root@203.154.16.197` with `natties45.pem`
+- **SSH Key**: `natties45.pem`
+
+#### Server 2 (app2 Production - v2.0.0)
+- **IP**: `203.154.16.162`
+- **Location**: `/opt/chatbot-gate`
+- **SSH Key**: `.secrets/natties45.pem`
+- **Knowledge Base**: `/root/openstack-support/` (mounted into opencode)
 
 ## Prerequisites
 
@@ -303,44 +309,49 @@ volumes:
 ## Production Deployment
 
 ### Server Details
-- **IP**: 203.154.16.197
+
+- **Server 1 (web1 Pilot)**: `203.154.16.197` (uses `natties45.pem`)
+- **Server 2 (app2 Production)**: `203.154.16.162` (uses `.secrets/natties45.pem`)
 - **OS**: Ubuntu AMD64
 - **Location**: `/opt/chatbot-gate`
-- **SSH**: `root@203.154.16.197` with `natties45.pem`
-- **Knowledge Base**: `/root/openstack-support/` (9 OLS categories)
+- **Knowledge Base**: `/root/openstack-support/`
 
-### Deploy from Windows
+### Deploy App2 (v2.0.0) from Windows to Server 2
 
 ```powershell
 # 1. Package code (exclude unnecessary files)
 cd C:\Users\natti\OneDrive\Documents\natties45\chatbot-gate
-tar.exe -czf C:\Users\natti\AppData\Local\Temp\opencode\chatbot-gate-deploy.tar.gz `
+tar.exe -czf C:\Users\natti\AppData\Local\Temp\chatbot-gate-app2-deploy.tar.gz `
   --exclude=node_modules `
   --exclude=.next `
   --exclude=.git `
   --exclude=*.pem `
   --exclude=*.db `
-  --exclude=.secrets `
   .
 
-# 2. Upload to server
-scp -i natties45.pem C:\Users\natti\AppData\Local\Temp\opencode\chatbot-gate-deploy.tar.gz root@203.154.16.197:/tmp/
+# 2. Upload to server 2
+scp -o StrictHostKeyChecking=no -i .secrets\natties45.pem C:\Users\natti\AppData\Local\Temp\chatbot-gate-app2-deploy.tar.gz root@203.154.16.162:/tmp/
 
-# 3. Extract on server
-ssh -i natties45.pem root@203.154.16.197
+# 3. Extract on server 2
+ssh -o StrictHostKeyChecking=no -i .secrets\natties45.pem root@203.154.16.162
 mkdir -p /opt/chatbot-gate
 cd /opt/chatbot-gate
-tar -xzf /tmp/chatbot-gate-deploy.tar.gz
-rm /tmp/chatbot-gate-deploy.tar.gz
+tar -xzf /tmp/chatbot-gate-app2-deploy.tar.gz
+rm /tmp/chatbot-gate-app2-deploy.tar.gz
 
-# 4. Build and deploy
+# 4. Set up environment variables
+cp /opt/chatbot-gate/.env.production /opt/chatbot-gate/.env
+
+# 5. Build and deploy
 docker compose build
 docker compose up -d
 
-# 5. Verify
+# 6. Preload Ollama qwen3:4b model inside container
+docker compose exec -T ollama ollama pull qwen3:4b
+
+# 7. Verify
 docker compose ps
-curl -s http://localhost/noc
-curl -s http://localhost:4096/global/health
+curl -s http://localhost/app2/login
 ```
 
 ### Cleanup Old Deployment

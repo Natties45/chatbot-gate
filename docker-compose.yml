@@ -34,6 +34,47 @@ services:
       retries: 5
       start_period: 30s
 
+  app2:
+    build:
+      context: .
+      dockerfile: apps/app2/Dockerfile
+      target: prod
+    environment:
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - APP2_PRIMARY_PROVIDER=groq
+      - APP2_PRIMARY_MODEL=qwen/qwen3-32b
+      - APP2_FALLBACK_PROVIDER=ollama
+      - APP2_FALLBACK_MODEL=qwen3:4b
+      - DATABASE_URL=file:./prisma/data/app2.db
+      - KNOWLEDGE_REPO_PATH=/root/openstack-support
+      - MCP_KB_URL=http://kb-mcp:4101
+      - MCP_CASE_HISTORY_URL=http://case-history-mcp:4102
+      - MCP_DOCKER_URL=http://docker-mcp:1234
+      - NODE_ENV=production
+      - APP2_ADMIN_USERNAME=${APP2_ADMIN_USERNAME:-admin}
+      - APP2_ADMIN_PASSWORD=${APP2_ADMIN_PASSWORD}
+    volumes:
+      - app2-data:/app/apps/app2/prisma/data
+      - /root/openstack-support:/root/openstack-support:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/noc"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  ollama:
+    image: ollama/ollama:latest
+    volumes:
+      - ollama-data:/root/.ollama
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+
   nginx:
     image: nginx:stable
     ports:
@@ -56,6 +97,31 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     restart: unless-stopped
 
+  kb-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile.kb-mcp
+    environment:
+      - PORT=4101
+      - KNOWLEDGE_REPO_PATH=/root/openstack-support
+    volumes:
+      - /root/openstack-support:/root/openstack-support:ro
+    restart: unless-stopped
+
+  case-history-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile.case-history-mcp
+    environment:
+      - PORT=4102
+      - DATABASE_URL=file:/app/apps/app2/data/app2.db
+    volumes:
+      - app2-data:/app/apps/app2/data
+    restart: unless-stopped
+
 volumes:
   opencode-data:
   web1-data:
+  app2-data:
+  ollama-data:
+

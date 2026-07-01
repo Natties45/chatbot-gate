@@ -4,18 +4,31 @@ const bcrypt = require('bcryptjs');
 const prisma = new PrismaClient();
 
 async function main() {
-  const passwordHash = await bcrypt.hash('admin', 10);
+  const username = process.env.APP2_ADMIN_USERNAME || 'admin';
+  const password = process.env.APP2_ADMIN_PASSWORD;
+
+  if (!password) {
+    if (process.env.NODE_ENV === 'production') {
+      console.error('FATAL: APP2_ADMIN_PASSWORD is required in production. Set APP2_ADMIN_PASSWORD environment variable.');
+      process.exit(1);
+    }
+    console.warn('WARNING: No APP2_ADMIN_PASSWORD set. Using unsafe default password for development only.');
+  }
+
+  const finalPassword = password || 'admin';
+  const passwordHash = await bcrypt.hash(finalPassword, 10);
+
   const admin = await prisma.user.upsert({
-    where: { username: 'admin' },
-    update: {},
+    where: { username },
+    update: { passwordHash },
     create: {
-      username: 'admin',
+      username,
       passwordHash,
       role: 'admin',
       status: 'active',
     },
   });
-  console.log('Seeded admin user:', admin.username);
+  console.log(`Seeded user: ${admin.username} (role: ${admin.role})`);
 }
 
 main()

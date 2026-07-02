@@ -34,3 +34,9 @@ Based on cross-referencing with the `openstack-support` repository, the agents m
 - The `llama-server` process inside the `ollama` container is crashing (signal: killed) when Groq fails and triggers the local fallback.
 - **Hypothesis:** OOM (Out Of Memory) event.
 - **Future Fix:** Adjust Docker resource limits (`docker-compose.yml`) or configure smaller context windows for the fallback model (`qwen3:4b`).
+
+## 4. Pending Action (Option C) - Web Admin Update System Broken
+*Note: Marked for tracking.*
+- The "Deploy" API (`/api/admin/deploy`) fails with `500 Internal Server Error` (likely due to `deploy-agent` sidecar being down).
+- The "Git Sync" API (`/api/admin/git-sync/action`) fails with `fatal: not a git repository` because it targets the knowledge base volume `/root/openstack-support` rather than the main repo, and the volume is not mounted as a Git repo in the container.
+- **Impact:** Application code and Agent Prompts cannot be updated via the App Server's UI. Manual deployment via SSH (steiner-deployer SOP) is required until this is fixed.

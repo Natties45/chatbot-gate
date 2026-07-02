@@ -21,8 +21,10 @@ interface NocRequestBody {
 
 const ALLOWED_PROMPT_TYPES = new Set([
   'analyze',
+  'clarify',
   'draft',
   'email',
+  'escalate',
   'feedback',
   'close',
   'chat',

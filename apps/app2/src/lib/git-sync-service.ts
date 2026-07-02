@@ -96,9 +96,9 @@ export async function getGitStatus(): Promise<GitStatusResult> {
 }
 
 export async function executeGitAction(
-  action: 'check_status' | 'pull_latest' | 'force_reset_pull' | 'reclone' | 'change_repo',
+  action: 'check_status' | 'pull_latest' | 'force_reset_pull' | 'reclone' | 'change_repo' | 'push_auto_generated',
   adminUsername: string,
-  extraParams?: { repoUrl?: string; branch?: string; confirm?: string }
+  extraParams?: { repoUrl?: string; branch?: string; confirm?: string; date?: string }
 ): Promise<GitStatusResult> {
   const settings = await getSettings();
   const localPath = settings['git.localPath'] || '/root/openstack-support';
@@ -193,6 +193,27 @@ export async function executeGitAction(
         const cloneRes = await runGitCmd(`git clone -b ${branch} ${repoUrl} .`, localPath);
         logOutput += `stdout: ${cloneRes.stdout}\nstderr: ${cloneRes.stderr}\n`;
         if (cloneRes.error) throw new Error(`Final clone failed: ${cloneRes.stderr}`);
+        break;
+      }
+
+      case 'push_auto_generated': {
+        const date = extraParams?.date || new Date().toISOString().split('T')[0];
+        const folder = `auto-generated/${date}/`;
+
+        logOutput += `Adding generated KB folder only: ${folder}\n`;
+        const addRes = await runGitCmd(`git add ${folder}`, localPath);
+        logOutput += `stdout: ${addRes.stdout}\nstderr: ${addRes.stderr}\n`;
+        if (addRes.error) throw new Error(`git add failed: ${addRes.stderr}`);
+
+        const commitRes = await runGitCmd(`git commit -m "auto: daily KB update ${date}"`, localPath);
+        logOutput += `stdout: ${commitRes.stdout}\nstderr: ${commitRes.stderr}\n`;
+        if (commitRes.error && !commitRes.stderr.includes('nothing to commit') && !commitRes.stdout.includes('nothing to commit')) {
+          throw new Error(`git commit failed: ${commitRes.stderr}`);
+        }
+
+        const pushRes = await runGitCmd(`git push origin ${branch}`, localPath);
+        logOutput += `stdout: ${pushRes.stdout}\nstderr: ${pushRes.stderr}\n`;
+        if (pushRes.error) throw new Error(`git push failed: ${pushRes.stderr}`);
         break;
       }
     }

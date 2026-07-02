@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GATE 2 - Operations Console</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+Thai:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080f0d;
+  --bg-soft: #0d1714;
+  --panel: rgba(16, 27, 24, 0.92);
+  --panel-strong: #101b18;
+  --panel-muted: #14211d;
+  --line: rgba(160, 199, 177, 0.14);
+  --line-strong: rgba(160, 199, 177, 0.28);
+  --text: #e8f3ee;
+  --muted: #8fa89d;
+  --faint: #5f776d;
+  --green: #4ade80;
+  --green-strong: #22c55e;
+  --blue: #60a5fa;
+  --violet: #a78bfa;
+  --yellow: #facc15;
+  --red: #f87171;
+  --orange: #fb923c;
+  --shadow: 0 24px 70px rgba(0, 0, 0, 0.42);
+  --radius: 18px;
+  --sidebar: 220px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 18% 10%, rgba(74, 222, 128, 0.16), transparent 26%),
+    radial-gradient(circle at 78% 4%, rgba(96, 165, 250, 0.13), transparent 24%),
+    linear-gradient(135deg, #060a09 0%, #0a1110 44%, #101819 100%);
+  color: var(--text);
+  font-family: 'Inter', 'Noto Sans Thai', sans-serif;
+  overflow: hidden;
+}
+button, input, select, textarea { font: inherit; }
+button { cursor: pointer; }
+
+.screen { display: none; min-height: 100vh; }
+.screen.active { display: flex; }
+
+.login-screen {
+  position: relative;
+  align-items: center;
+  justify-content: center;
+  padding: 28px;
+  overflow: hidden;
+}
+.login-grid {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) 420px;
+  gap: 28px;
+  width: min(1160px, 100%);
+  align-items: stretch;
+}
+.hero-card, .login-card, .glass-card {
+  background: linear-gradient(180deg, rgba(17, 32, 27, 0.92), rgba(11, 19, 17, 0.92));
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
+}
+.hero-card { padding: 34px; min-height: 560px; display: flex; flex-direction: column; justify-content: space-between; }
+.brand-row { display: flex; align-items: center; gap: 14px; }
+.mark {
+  width: 42px; height: 42px; border-radius: 14px;
+  display: grid; place-items: center;
+  background: linear-gradient(135deg, var(--green), #0ea5e9);
+  color: #06100d; font-weight: 900; letter-spacing: 0.04em;
+}
+.brand-title { font-size: 20px; font-weight: 800; letter-spacing: 0.08em; }
+.brand-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.hero-copy { max-width: 680px; }
+.eyebrow { color: var(--green); font-size: 12px; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 14px; }
+.hero-copy h1 { font-size: clamp(34px, 5vw, 62px); line-height: 1.04; letter-spacing: -0.06em; margin-bottom: 18px; }
+.hero-copy p { color: var(--muted); font-size: 16px; line-height: 1.75; max-width: 620px; }
+.metric-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.metric {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.025);
+  padding: 14px;
+}
+.metric-value { font-size: 18px; font-weight: 800; }
+.metric-label { font-size: 11px; color: var(--muted); margin-top: 4px; }
+.login-card { padding: 30px; display: flex; flex-direction: column; justify-content: center; }
+.login-card h2 { font-size: 26px; letter-spacing: -0.03em; margin-bottom: 8px; }
+.login-card > p { color: var(--muted); font-size: 13px; line-height: 1.6; margin-bottom: 24px; }
+.field { display: flex; flex-direction: column; gap: 7px; margin-bottom: 16px; }
+.field label { font-size: 11px; color: var(--muted); font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
+.field input, .field select, .field textarea {
+  width: 100%; border: 1px solid var(--line); background: rgba(4, 8, 7, 0.62);
+  color: var(--text); border-radius: 12px; padding: 12px 13px; outline: none;
+}
+.field input:focus, .field textarea:focus { border-color: rgba(74, 222, 128, 0.7); }
+.status-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 18px 0 24px; }
+.status-pill {
+  border: 1px solid var(--line); border-radius: 12px; padding: 9px;
+  font-size: 11px; color: var(--muted); background: rgba(255,255,255,0.02);
+}
+.role-picker { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 18px; }
+.role-option {
+  border: 1px solid var(--line); background: rgba(255,255,255,0.025); color: var(--muted);
+  border-radius: 13px; padding: 10px 8px; text-align: center; font-size: 12px; font-weight: 800;
+}
+.role-option span { display: block; font-size: 10px; font-weight: 600; margin-top: 3px; color: var(--faint); }
+.role-option.active { border-color: rgba(74,222,128,0.58); background: rgba(74,222,128,0.13); color: var(--text); }
+.role-option.active span { color: #bbf7d0; }
+.dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+.dot.green { background: var(--green); box-shadow: 0 0 14px rgba(74,222,128,0.7); }
+.dot.blue { background: var(--blue); }
+.dot.violet { background: var(--violet); }
+.dot.yellow { background: var(--yellow); }
+.dot.red { background: var(--red); }
+.login-note { margin-top: 16px; color: var(--faint); font-size: 11px; line-height: 1.5; }
+
+.btn {
+  border: 0; border-radius: 12px; padding: 10px 14px; display: inline-flex; align-items: center;
+  justify-content: center; gap: 7px; font-size: 12px; font-weight: 800; transition: 0.16s ease;
+}
+.btn.primary { background: var(--green); color: #05100c; }
+.btn.primary:hover { background: var(--green-strong); transform: translateY(-1px); }
+.btn.secondary { background: rgba(255,255,255,0.055); color: var(--text); border: 1px solid var(--line); }
+.btn.secondary:hover { border-color: var(--line-strong); background: rgba(255,255,255,0.08); }
+.btn.danger { background: rgba(248, 113, 113, 0.14); color: #fca5a5; border: 1px solid rgba(248, 113, 113, 0.26); }
+.btn.warn { background: rgba(250, 204, 21, 0.13); color: #fde68a; border: 1px solid rgba(250, 204, 21, 0.23); }
+.btn.blue { background: rgba(96, 165, 250, 0.16); color: #bfdbfe; border: 1px solid rgba(96, 165, 250, 0.25); }
+.btn.violet { background: rgba(167, 139, 250, 0.16); color: #ddd6fe; border: 1px solid rgba(167, 139, 250, 0.25); }
+.btn.block { width: 100%; padding: 13px 16px; }
+.btn.sm { padding: 7px 10px; border-radius: 10px; font-size: 11px; }
+
+.app-screen { width: 100%; }
+.sidebar {
+  width: var(--sidebar); height: 100vh; position: fixed; inset: 0 auto 0 0;
+  background: rgba(9, 14, 13, 0.92); border-right: 1px solid var(--line);
+  display: flex; flex-direction: column; z-index: 10; backdrop-filter: blur(18px);
+}
+.sidebar-head { padding: 18px 16px 14px; border-bottom: 1px solid var(--line); }
+.sidebar-head .brand-row { gap: 10px; }
+.sidebar-head .mark { width: 34px; height: 34px; border-radius: 11px; font-size: 13px; }
+.user-chip { margin-top: 12px; padding: 9px 10px; border-radius: 12px; background: rgba(255,255,255,0.035); color: var(--muted); font-size: 11px; }
+.nav { flex: 1; padding: 12px 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; }
+.nav button {
+  width: 100%; border: 0; background: transparent; color: var(--muted); text-align: left;
+  padding: 11px 12px; border-radius: 12px; display: flex; align-items: center; gap: 10px;
+  font-size: 13px; font-weight: 700;
+}
+.nav button:hover { background: rgba(255,255,255,0.045); color: var(--text); }
+.nav button.active { background: var(--green); color: #06100d; }
+.nav-icon { width: 20px; text-align: center; font-size: 13px; font-weight: 900; }
+.version-rail { padding: 12px 14px; border-top: 1px solid var(--line); }
+.version-rail h4 { font-size: 11px; color: var(--faint); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 9px; }
+.version-step { display: flex; gap: 8px; align-items: flex-start; padding: 7px 0; font-size: 11px; color: var(--muted); }
+.step-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); margin-top: 4px; flex: 0 0 auto; }
+.sidebar-footer { padding: 12px 14px 14px; border-top: 1px solid var(--line); }
+.footer-user { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; color: var(--muted); font-size: 11px; }
+.logout-button { width: 100%; justify-content: flex-start; }
+.app-main { margin-left: var(--sidebar); min-height: 100vh; display: flex; flex-direction: column; }
+.topbar {
+  height: 64px; padding: 0 22px; display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--line); background: rgba(12, 20, 18, 0.72); backdrop-filter: blur(18px);
+}
+.top-title h1 { font-size: 18px; letter-spacing: -0.02em; }
+.top-title p { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.top-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.badge {
+  display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 5px 9px;
+  font-size: 11px; font-weight: 800; border: 1px solid var(--line); color: var(--muted);
+  background: rgba(255,255,255,0.035); white-space: nowrap;
+}
+.badge.green { color: #bbf7d0; background: rgba(74,222,128,0.12); border-color: rgba(74,222,128,0.24); }
+.badge.blue { color: #bfdbfe; background: rgba(96,165,250,0.12); border-color: rgba(96,165,250,0.24); }
+.badge.violet { color: #ddd6fe; background: rgba(167,139,250,0.12); border-color: rgba(167,139,250,0.24); }
+.badge.yellow { color: #fef08a; background: rgba(250,204,21,0.11); border-color: rgba(250,204,21,0.23); }
+.badge.red { color: #fecaca; background: rgba(248,113,113,0.11); border-color: rgba(248,113,113,0.23); }
+.content { flex: 1; padding: 18px 22px; overflow: auto; }
+.page { display: none; height: calc(100vh - 100px); min-height: 620px; }
+.page.active { display: block; }
+
+.dashboard-layout { display: flex; flex-direction: column; gap: 14px; height: 100%; }
+.dashboard-hero { border: 1px solid var(--line); background: var(--panel); border-radius: var(--radius); padding: 18px; display: flex; justify-content: space-between; gap: 16px; align-items: center; }
+.dashboard-hero h2 { font-size: 22px; letter-spacing: -0.03em; }
+.dashboard-hero p { color: var(--muted); font-size: 13px; margin-top: 5px; line-height: 1.6; }
+.dashboard-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.dashboard-row.two { grid-template-columns: 1.1fr 0.9fr; flex: 1; min-height: 0; }
+.dash-card { border: 1px solid var(--line); background: var(--panel); border-radius: var(--radius); padding: 14px; min-width: 0; }
+.dash-card h3 { font-size: 13px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.dash-value { font-size: 26px; font-weight: 900; letter-spacing: -0.04em; }
+.dash-help { color: var(--muted); font-size: 12px; margin-top: 5px; line-height: 1.45; }
+.dash-list { display: flex; flex-direction: column; gap: 9px; margin-top: 10px; }
+.dash-row { display: grid; grid-template-columns: 92px 1fr auto; gap: 10px; align-items: center; border: 1px solid var(--line); border-radius: 14px; padding: 10px; font-size: 12px; color: var(--muted); }
+.dash-row b { color: var(--text); }
+.quick-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
+.customize-panel { border: 1px dashed var(--line-strong); background: rgba(255,255,255,0.018); border-radius: 14px; padding: 12px; margin-top: 10px; color: var(--muted); font-size: 12px; }
+.customize-panel label { display: inline-flex; gap: 7px; align-items: center; margin: 5px 12px 5px 0; }
+
+.workspace { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 14px; height: 100%; }
+.rail, .chat, .settings-card, .table-card, .diagnosis-card, .panel {
+  border: 1px solid var(--line); background: var(--panel); border-radius: var(--radius); box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+}
+.rail { padding: 14px; overflow: auto; }
+.rail-title { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.rail-title h3 { font-size: 14px; }
+.case-card {
+  border: 1px solid var(--line); border-radius: 14px; padding: 12px; margin-bottom: 10px;
+  background: rgba(255,255,255,0.025);
+}
+.case-card.active { border-color: rgba(74,222,128,0.46); background: rgba(74,222,128,0.055); }
+.case-id { font-size: 12px; font-weight: 800; color: var(--text); }
+.case-summary { margin-top: 6px; color: var(--muted); font-size: 12px; line-height: 1.45; }
+.case-meta { display: flex; gap: 6px; margin-top: 9px; flex-wrap: wrap; }
+.mini-flow { margin-top: 16px; }
+.flow-step {
+  display: flex; gap: 10px; padding: 9px 0; border-bottom: 1px dashed var(--line); color: var(--muted); font-size: 12px;
+}
+.flow-step.active { color: var(--green); font-weight: 800; }
+.flow-step.done { color: var(--text); }
+.flow-index { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,0.055); font-size: 10px; flex: 0 0 auto; }
+.flow-step.active .flow-index { background: var(--green); color: #06100d; }
+.chat { height: 100%; display: flex; flex-direction: column; overflow: hidden; }
+.chat-head { padding: 14px 16px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+.chat-head h2 { font-size: 15px; }
+.chat-head p { color: var(--muted); font-size: 12px; margin-top: 3px; }
+.chat-body { flex: 1; padding: 16px; overflow: auto; display: flex; flex-direction: column; gap: 12px; }
+.msg { max-width: 78%; border-radius: 16px; padding: 12px 14px; font-size: 13px; line-height: 1.68; white-space: normal; }
+.msg.user { align-self: flex-end; background: var(--green); color: #06100d; border-bottom-right-radius: 5px; }
+.msg.ai { align-self: flex-start; background: rgba(255,255,255,0.045); border: 1px solid var(--line); border-bottom-left-radius: 5px; }
+.msg.system { align-self: stretch; max-width: 100%; background: rgba(96, 165, 250, 0.08); border: 1px solid rgba(96, 165, 250, 0.2); }
+.msg.escalate { border-left: 4px solid var(--orange); }
+.msg.draft { border-left: 4px solid var(--green); }
+.msg-title { font-weight: 800; margin-bottom: 8px; }
+.msg-meta { display: flex; gap: 6px; margin-top: 10px; color: var(--faint); font-size: 10px; flex-wrap: wrap; }
+.option-grid { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+.option { border: 1px solid var(--line-strong); border-radius: 999px; padding: 7px 10px; color: var(--text); background: rgba(255,255,255,0.035); font-size: 12px; font-weight: 700; }
+.attachment-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.file-chip { display: inline-flex; gap: 7px; align-items: center; padding: 7px 10px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); font-size: 11px; background: rgba(255,255,255,0.025); }
+.tool-log {
+  border: 1px solid rgba(167,139,250,0.2); background: rgba(167,139,250,0.055); border-radius: 14px; padding: 12px;
+  font-size: 11px; color: var(--muted); max-width: 88%; align-self: flex-start;
+}
+.tool-log h4 { color: #ddd6fe; margin-bottom: 8px; font-size: 12px; }
+.tool-row { display: grid; grid-template-columns: 54px 1fr auto; gap: 8px; padding: 4px 0; border-top: 1px dashed rgba(167,139,250,0.14); }
+.tool-row:first-of-type { border-top: 0; }
+.chat-actions { border-top: 1px solid var(--line); padding: 10px 12px; display: flex; gap: 7px; flex-wrap: wrap; }
+.composer { border-top: 1px solid var(--line); padding: 12px; display: flex; gap: 8px; align-items: flex-end; }
+.composer textarea { flex: 1; resize: none; min-height: 56px; max-height: 110px; border-radius: 14px; border: 1px solid var(--line); background: rgba(4,8,7,0.55); color: var(--text); padding: 12px; outline: none; }
+
+.progress-wrap { border: 1px solid var(--line); border-radius: 16px; padding: 14px; background: rgba(255,255,255,0.025); margin: 6px 0 8px; }
+.progress-top { display: flex; justify-content: space-between; align-items: center; font-size: 12px; margin-bottom: 10px; }
+.progress-bar { height: 9px; border-radius: 999px; background: rgba(255,255,255,0.07); overflow: hidden; }
+.progress-fill { height: 100%; width: 66%; border-radius: inherit; background: linear-gradient(90deg, var(--green), var(--blue), var(--violet)); }
+.research-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
+.research-step { border: 1px solid var(--line); border-radius: 12px; padding: 10px; color: var(--muted); font-size: 11px; }
+.research-step.active { border-color: rgba(96,165,250,0.45); background: rgba(96,165,250,0.08); color: #bfdbfe; }
+.research-step.done { border-color: rgba(74,222,128,0.35); color: #bbf7d0; }
+.diagnosis-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; }
+.diagnosis-card { padding: 13px; box-shadow: none; }
+.diagnosis-card h4 { font-size: 12px; color: var(--green); margin-bottom: 7px; }
+.diagnosis-card p, .diagnosis-card li { color: var(--muted); font-size: 12px; line-height: 1.55; }
+.diagnosis-card ul { padding-left: 18px; }
+
+.history-layout { display: flex; flex-direction: column; gap: 14px; height: 100%; }
+.filter-card, .table-card { border: 1px solid var(--line); background: var(--panel); border-radius: var(--radius); padding: 14px; }
+.filter-grid { display: grid; grid-template-columns: repeat(6, minmax(120px, 1fr)); gap: 10px; align-items: end; }
+.table-card { flex: 1; overflow: auto; padding: 0; }
+table { width: 100%; border-collapse: collapse; min-width: 850px; }
+th, td { padding: 12px 14px; border-bottom: 1px solid var(--line); text-align: left; font-size: 12px; }
+th { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; background: rgba(255,255,255,0.025); position: sticky; top: 0; }
+td { color: var(--text); }
+
+.settings-layout { display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 14px; height: 100%; }
+.settings-tabs { border: 1px solid var(--line); background: var(--panel); border-radius: var(--radius); padding: 10px; height: fit-content; }
+.settings-tabs button { width: 100%; border: 0; background: transparent; color: var(--muted); padding: 11px; border-radius: 12px; text-align: left; font-size: 12px; font-weight: 800; margin-bottom: 4px; }
+.settings-tabs button.active { background: var(--green); color: #06100d; }
+.settings-card { padding: 18px; overflow: auto; }
+.settings-panel { display: none; }
+.settings-panel.active { display: block; }
+.section-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.section-title h2 { font-size: 18px; letter-spacing: -0.02em; }
+.section-title p { color: var(--muted); font-size: 12px; margin-top: 4px; }
+.settings-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.setting-box { border: 1px solid var(--line); background: rgba(255,255,255,0.025); border-radius: 16px; padding: 14px; }
+.setting-box.wide { grid-column: 1 / -1; }
+.setting-box h3 { font-size: 14px; margin-bottom: 10px; }
+.setting-box p { color: var(--muted); font-size: 12px; line-height: 1.6; }
+.setting-row { display: flex; justify-content: space-between; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--line); align-items: center; }
+.setting-row:last-child { border-bottom: 0; }
+.setting-label { font-size: 12px; font-weight: 800; }
+.setting-help { font-size: 11px; color: var(--muted); margin-top: 3px; }
+.toggle { width: 42px; height: 24px; border-radius: 999px; background: rgba(255,255,255,0.12); position: relative; flex: 0 0 auto; }
+.toggle.on { background: var(--green); }
+.toggle::after { content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; background: white; border-radius: 50%; transition: 0.2s; }
+.toggle.on::after { transform: translateX(18px); background: #06100d; }
+.log-box { background: #050807; border: 1px solid var(--line); border-radius: 14px; padding: 12px; color: #b7f7ce; font: 12px/1.7 Consolas, Monaco, monospace; overflow: auto; max-height: 220px; }
+.deploy-timeline { display: flex; flex-direction: column; gap: 9px; }
+.deploy-item { display: grid; grid-template-columns: 110px 1fr auto; gap: 10px; align-items: center; border: 1px solid var(--line); border-radius: 14px; padding: 11px; color: var(--muted); font-size: 12px; }
+
+.mobile-bar { display: none; position: sticky; top: 0; z-index: 30; padding: 10px; background: rgba(8, 15, 13, 0.96); border-bottom: 1px solid var(--line); }
+.mobile-bar select { width: 100%; border: 1px solid var(--line); background: var(--panel); color: var(--text); border-radius: 12px; padding: 10px; }
+
+@media (max-width: 980px) {
+  body { overflow: auto; }
+  .login-grid { grid-template-columns: 1fr; }
+  .hero-card { min-height: auto; gap: 34px; }
+  .metric-row { grid-template-columns: repeat(2, 1fr); }
+  .sidebar { display: none; }
+  .mobile-bar { display: block; }
+  .app-main { margin-left: 0; }
+  .topbar { height: auto; min-height: 64px; align-items: flex-start; gap: 12px; padding: 14px; flex-direction: column; }
+  .content { padding: 12px; }
+  .page { height: auto; min-height: auto; }
+  .workspace, .settings-layout { grid-template-columns: 1fr; }
+  .dashboard-row, .dashboard-row.two { grid-template-columns: 1fr; }
+  .dashboard-hero { align-items: flex-start; flex-direction: column; }
+  .dash-row { grid-template-columns: 1fr; }
+  .rail { max-height: none; }
+  .chat { min-height: 720px; }
+  .filter-grid, .settings-grid, .diagnosis-grid, .research-steps { grid-template-columns: 1fr; }
+  .msg { max-width: 96%; }
+  .settings-tabs { display: flex; overflow-x: auto; gap: 6px; }
+  .settings-tabs button { white-space: nowrap; margin-bottom: 0; }
+}
+
+@media (max-width: 560px) {
+  .login-screen { padding: 14px; }
+  .hero-card, .login-card { padding: 22px; border-radius: 22px; }
+  .status-strip { grid-template-columns: 1fr; }
+  .role-picker { grid-template-columns: 1fr; }
+  .metric-row { grid-template-columns: 1fr; }
+  .composer { flex-direction: column; align-items: stretch; }
+  .chat-actions { align-items: stretch; }
+  .chat-actions .btn { flex: 1; }
+  .deploy-item { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<section id="loginScreen" class="screen login-screen active">
+  <div class="login-grid">
+    <div class="hero-card">
+      <div class="brand-row">
+        <div class="mark">G2</div>
+        <div>
+          <div class="brand-title">GATE 2</div>
+          <div class="brand-sub">AI-powered NOC and Operation Support</div>
+        </div>
+      </div>
+
+      <div class="hero-copy">
+        <div class="eyebrow">Operations Console</div>
+        <h1>ศูนย์กลางรับเคส วิเคราะห์ ส่งต่อ และดูแลระบบ</h1>
+        <p>
+          GATE 2 รวมงาน NOC และ Operation ไว้ในหน้าจอเดียว ตั้งแต่การแยกประเภทปัญหา,
+          วิเคราะห์ด้วย Knowledge Base, ส่งต่อ Operation, บันทึก case history, สร้าง KB รายวัน และ deploy app2
+        </p>
+      </div>
+
+      <div class="metric-row">
+        <div class="metric"><div class="metric-value">6</div><div class="metric-label">NOC states</div></div>
+        <div class="metric"><div class="metric-value">3</div><div class="metric-label">Research sources</div></div>
+        <div class="metric"><div class="metric-value">24h</div><div class="metric-label">Upload cleanup</div></div>
+        <div class="metric"><div class="metric-value">1-click</div><div class="metric-label">Deploy flow</div></div>
+      </div>
+    </div>
+
+    <div class="login-card">
+      <h2>เข้าสู่ระบบ</h2>
+      <p>แยกสิทธิ์ตาม role: admin, NOC, Operation และแสดงเมนูตามสิทธิ์ผู้ใช้</p>
+      <div class="role-picker" aria-label="role selector">
+        <button class="role-option active" data-role="admin" onclick="selectRole('admin')">Admin<span>full console</span></button>
+        <button class="role-option" data-role="noc" onclick="selectRole('noc')">NOC<span>support cases</span></button>
+        <button class="role-option" data-role="operation" onclick="selectRole('operation')">Operation<span>diagnostics</span></button>
+      </div>
+      <div class="field">
+        <label>Username</label>
+        <input id="usernameInput" value="admin" aria-label="username">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" value="password" aria-label="password">
+      </div>
+      <div class="status-strip">
+        <div class="status-pill"><span class="dot green"></span>Groq primary</div>
+        <div class="status-pill"><span class="dot violet"></span>Ollama fallback</div>
+        <div class="status-pill"><span class="dot blue"></span>MCP ready</div>
+      </div>
+      <button class="btn primary block" onclick="enterApp()">เข้าสู่ระบบ</button>
+      <div class="login-note">
+        หน้าแรกหลังเข้าสู่ระบบคือ Dashboard และเมนูจะแสดงตาม role ของผู้ใช้
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="appScreen" class="screen app-screen">
+  <aside class="sidebar">
+    <div class="sidebar-head">
+      <div class="brand-row">
+        <div class="mark">G2</div>
+        <div>
+          <div class="brand-title">GATE 2</div>
+          <div class="brand-sub">Operations Console v2.4.0</div>
+        </div>
+      </div>
+      <div class="user-chip" id="sidebarUserChip">Logged in as: admin<br>Role: full access</div>
+    </div>
+    <nav class="nav" id="sideNav"></nav>
+    <div class="version-rail">
+      <h4>System Status</h4>
+      <div id="systemStatusList"></div>
+    </div>
+    <div class="sidebar-footer">
+      <div class="footer-user"><span id="footerUserLabel">admin</span><span class="badge green" id="footerRoleBadge">admin</span></div>
+      <button class="btn danger sm logout-button" onclick="backToLogin()">Logout</button>
+    </div>
+  </aside>
+
+  <main class="app-main">
+    <div class="mobile-bar">
+      <select id="mobileNav" onchange="showPage(this.value)"></select>
+    </div>
+
+    <header class="topbar">
+      <div class="top-title">
+        <h1 id="pageTitle">Dashboard</h1>
+        <p id="pageSubtitle">Today overview and role-based work queue</p>
+      </div>
+      <div class="top-actions" id="pageActions">
+        <span class="badge green"><span class="dot green"></span>All systems ready</span>
+        <button class="btn secondary sm">Customize Dashboard</button>
+      </div>
+    </header>
+
+    <div class="content">
+      <section id="page-dashboard" class="page active">
+        <div class="dashboard-layout">
+          <div class="dashboard-hero">
+            <div>
+              <h2 id="dashboardGreeting">สวัสดี admin</h2>
+              <p id="dashboardIntro">ภาพรวมระบบ, งานค้าง, automation และ action ที่ควรทำวันนี้</p>
+            </div>
+            <button class="btn secondary" onclick="toggleCustomize()">Customize Dashboard</button>
+          </div>
+
+          <div class="dashboard-row" id="dashboardMetrics"></div>
+
+          <div class="dashboard-row two">
+            <div class="dash-card">
+              <h3>Work Queue <span class="badge blue" id="queueCount">4 items</span></h3>
+              <div class="dash-list" id="dashboardQueue"></div>
+            </div>
+            <div class="dash-card">
+              <h3>Quick Actions</h3>
+              <div class="quick-grid" id="dashboardActions"></div>
+              <div class="customize-panel" id="customizePanel" style="display: none;">
+                <b>Customize Dashboard</b><br>
+                <label><input type="checkbox" checked> Today Summary</label>
+                <label><input type="checkbox" checked> Work Queue</label>
+                <label><input type="checkbox" checked> Quick Actions</label>
+                <label><input type="checkbox" checked> System Status</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="page-noc" class="page">
+        <div class="workspace">
+          <aside class="rail">
+            <div class="rail-title"><h3>NOC Queue</h3><span class="badge green">2 active</span></div>
+            <div class="case-card active">
+              <div class="case-id">02076901</div>
+              <div class="case-summary">ลูกค้าแจ้งว่า "ลืม password" แต่ยังไม่ชัดว่าเป็น portal หรือ VM</div>
+              <div class="case-meta"><span class="badge yellow">clarify</span><span class="badge">12:40</span></div>
+            </div>
+            <div class="case-card">
+              <div class="case-id">02076902</div>
+              <div class="case-summary">แนบ screenshot error หน้าใช้งาน billing</div>
+              <div class="case-meta"><span class="badge blue">draft</span><span class="badge">13:10</span></div>
+            </div>
+
+            <div class="mini-flow">
+              <div class="flow-step done"><span class="flow-index">0</span><span>IDLE - เลือกหรือสร้างเคส</span></div>
+              <div class="flow-step active"><span class="flow-index">1</span><span>CLARIFY - ถามข้อมูลเพิ่ม</span></div>
+              <div class="flow-step"><span class="flow-index">2</span><span>ANALYZE - วิเคราะห์หมวดหมู่</span></div>
+              <div class="flow-step"><span class="flow-index">3</span><span>CHAT - ถามตอบต่อเนื่อง</span></div>
+              <div class="flow-step"><span class="flow-index">4</span><span>DRAFT - ร่างคำตอบลูกค้า</span></div>
+              <div class="flow-step"><span class="flow-index">5</span><span>ESCALATE - ส่ง Operation</span></div>
+            </div>
+          </aside>
+
+          <div class="chat">
+            <div class="chat-head">
+              <div>
+                <h2>NOC Case 02076901</h2>
+                <p>Clarify phase prevents wrong category before analysis. Max 2 rounds.</p>
+              </div>
+              <span class="badge yellow">State 1: Clarify</span>
+            </div>
+            <div class="chat-body">
+              <div class="msg user">ลูกค้าบอกว่าลืม password เข้าใช้งานไม่ได้ครับ</div>
+              <div class="msg ai">
+                <div class="msg-title">ขอสอบถามเพิ่มเติม</div>
+                จากข้อความนี้ยังมีได้หลายกรณี รบกวนเลือกประเภท password ที่ลูกค้าหมายถึงก่อนครับ
+                <div class="option-grid">
+                  <button class="option">[1] Portal / Account</button>
+                  <button class="option">[2] VM / Instance</button>
+                  <button class="option">[3] Email / Domain</button>
+                  <button class="option">[4] อื่นๆ - พิมพ์เพิ่มเติม</button>
+                </div>
+                <div class="msg-meta"><span>Groq</span><span>clarify round 1/2</span></div>
+              </div>
+              <div class="msg user">[2] VM / Instance และลูกค้าแนบ screenshot</div>
+              <div class="attachment-row">
+                <span class="file-chip">แนบไฟล์: vm-login-error.png</span>
+                <span class="file-chip">txt/image only, max 5MB</span>
+              </div>
+              <div class="tool-log">
+                <h4>MCP Tool Calls</h4>
+                <div class="tool-row"><span class="badge green">OK</span><span>kb-mcp/kb_search query="VM password reset"</span><span>118ms</span></div>
+                <div class="tool-row"><span class="badge green">OK</span><span>case-history-mcp/case_similar limit=3</span><span>74ms</span></div>
+              </div>
+              <div class="msg ai">
+                <div class="msg-title">การวิเคราะห์เบื้องต้น</div>
+                Category: VM/Instance<br>
+                Confidence: 88%<br>
+                สรุป: ลูกค้าต้องการ reset password ของ VM ไม่ใช่ portal account และควรยืนยันชื่อ project, VM name และ OS ก่อนดำเนินการ
+              </div>
+              <div class="msg ai draft">
+                <div class="msg-title">Draft Response</div>
+                เรียน ผู้ใช้บริการ<br><br>
+                ทีมงานได้รับเรื่องการเข้าใช้งาน VM ไม่ได้จากกรณีลืม password แล้วครับ รบกวนแจ้งชื่อ project, ชื่อ VM และระบบปฏิบัติการที่ใช้งาน เพื่อให้ทีมงานตรวจสอบขั้นตอนที่เหมาะสมต่อไปครับ<br><br>
+                ขอบคุณครับ
+              </div>
+              <div class="msg ai escalate">
+                <div class="msg-title">Escalation Summary to Operation</div>
+                Issue: ลูกค้าลืม password ของ VM<br>
+                Reason: ต้องตรวจสอบสิทธิ์และขั้นตอน reset ฝั่งระบบ<br>
+                Requested data: project, VM name, OS, contact window
+              </div>
+            </div>
+            <div class="chat-actions">
+              <button class="btn secondary sm">ร่างคำตอบ</button>
+              <button class="btn secondary sm">Feedback</button>
+              <button class="btn secondary sm">Copy</button>
+              <button class="btn primary sm">ใช้ร่างนี้</button>
+              <button class="btn warn sm">Escalate</button>
+              <button class="btn blue sm">Handoff</button>
+            </div>
+            <div class="composer">
+              <button class="btn secondary">แนบไฟล์</button>
+              <textarea placeholder="วางข้อความลูกค้า หรือพิมพ์ข้อมูลเพิ่มเติม..."></textarea>
+              <button class="btn primary">ส่ง</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="page-operation" class="page">
+        <div class="workspace">
+          <aside class="rail">
+            <div class="rail-title"><h3>Operation Cases</h3><span class="badge blue">research</span></div>
+            <div class="case-card active">
+              <div class="case-id">02076911</div>
+              <div class="case-summary">Container app2 memory spike หลัง deploy ล่าสุด</div>
+              <div class="case-meta"><span class="badge blue">research</span><span class="badge">14:05</span></div>
+            </div>
+            <div class="case-card">
+              <div class="case-id">02076912</div>
+              <div class="case-summary">nginx 502 intermittent, need log correlation</div>
+              <div class="case-meta"><span class="badge violet">diagnose</span></div>
+            </div>
+
+            <div class="mini-flow">
+              <div class="flow-step done"><span class="flow-index">0</span><span>IDLE - สร้างเคส</span></div>
+              <div class="flow-step done"><span class="flow-index">1</span><span>CLARIFY - ยืนยันระบบและ log</span></div>
+              <div class="flow-step active"><span class="flow-index">2</span><span>RESEARCH - KB to OpenCode to Docker</span></div>
+              <div class="flow-step"><span class="flow-index">3</span><span>DIAGNOSE - สรุปสาเหตุและ action</span></div>
+            </div>
+          </aside>
+
+          <div class="chat">
+            <div class="chat-head">
+              <div>
+                <h2>Operation Case 02076911</h2>
+                <p>Sequential multi-source research with polling progress endpoint.</p>
+              </div>
+              <span class="badge blue">State 2: Research</span>
+            </div>
+            <div class="chat-body">
+              <div class="msg user">app2 memory spike หลัง deploy v2.0.1 และบางช่วง response ช้า ช่วยวิเคราะห์ครับ</div>
+              <div class="msg ai">
+                <div class="msg-title">ขอข้อมูลเพิ่ม</div>
+                ปัญหานี้เกี่ยวกับ service runtime รบกวนยืนยันข้อมูลที่มีอยู่
+                <div class="option-grid">
+                  <button class="option">[1] มี container logs</button>
+                  <button class="option">[2] มี metrics</button>
+                  <button class="option">[3] ยังไม่มีข้อมูลเพิ่ม</button>
+                </div>
+              </div>
+              <div class="msg user">มี logs และ container stats ครับ</div>
+              <div class="msg system">
+                <div class="msg-title">Research Progress</div>
+                <div class="progress-wrap">
+                  <div class="progress-top"><span>Step 2/3: กำลังถาม OpenCode เพื่อค้นหา external docs</span><span>66%</span></div>
+                  <div class="progress-bar"><div class="progress-fill"></div></div>
+                  <div class="research-steps">
+                    <div class="research-step done"><b>1. KB Search</b><br>พบ runbook memory pressure</div>
+                    <div class="research-step active"><b>2. OpenCode</b><br>ค้นหา known issue และ docs</div>
+                    <div class="research-step"><b>3. Docker</b><br>ตรวจ logs และ stats แบบ read-only</div>
+                  </div>
+                </div>
+              </div>
+              <div class="tool-log">
+                <h4>Research Calls</h4>
+                <div class="tool-row"><span class="badge green">OK</span><span>kb-mcp/kb_search "Next.js memory spike"</span><span>96ms</span></div>
+                <div class="tool-row"><span class="badge blue">RUN</span><span>opencode:4096/api/chat external research</span><span>42s</span></div>
+                <div class="tool-row"><span class="badge green">OK</span><span>docker-mcp/container_stats app2</span><span>211ms</span></div>
+              </div>
+              <div class="msg ai">
+                <div class="msg-title">Structured Diagnosis</div>
+                <div class="diagnosis-grid">
+                  <div class="diagnosis-card"><h4>Issue</h4><p>app2 ใช้ memory เพิ่มหลัง deploy และ response time สูงเป็นช่วงๆ</p></div>
+                  <div class="diagnosis-card"><h4>Likely Cause</h4><p>มี session/history accumulation และ build ใหม่มี cache warm-up สูงกว่าปกติ</p></div>
+                  <div class="diagnosis-card"><h4>Actions</h4><ul><li>ตรวจ container stats ต่อเนื่อง 15 นาที</li><li>ตรวจ request ที่ทำให้ message history ใหญ่</li><li>ตั้ง memory alert และเก็บ logs เพิ่ม</li></ul></div>
+                  <div class="diagnosis-card"><h4>References</h4><p>KB: operation-memory.yaml<br>Docker: app2 stats<br>OpenCode: external docs summary</p></div>
+                </div>
+              </div>
+            </div>
+            <div class="chat-actions">
+              <button class="btn secondary sm">ถามต่อ</button>
+              <button class="btn secondary sm">ร่างคำตอบ</button>
+              <button class="btn secondary sm">แนบไฟล์เพิ่ม</button>
+              <button class="btn primary sm">Export</button>
+              <button class="btn danger sm">Close Case</button>
+            </div>
+            <div class="composer">
+              <button class="btn secondary">แนบ log</button>
+              <textarea placeholder="อธิบายปัญหา หรือวาง log เพิ่มเติม..."></textarea>
+              <button class="btn primary">ส่ง</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="page-history" class="page">
+        <div class="history-layout">
+          <div class="filter-card">
+            <div class="filter-grid">
+              <div class="field"><label>From</label><input type="date" value="2026-07-02"></div>
+              <div class="field"><label>To</label><input type="date" value="2026-07-02"></div>
+              <div class="field"><label>Module</label><select><option>All Modules</option><option>NOC</option><option>Operation</option></select></div>
+              <div class="field"><label>Status</label><select><option>All Status</option><option>In Progress</option><option>Closed</option><option>Escalated</option></select></div>
+              <div class="field"><label>Case ID</label><input value="020769"></div>
+              <button class="btn primary">Search</button>
+            </div>
+          </div>
+          <div class="table-card">
+            <table>
+              <thead><tr><th>Case ID</th><th>Module</th><th>User</th><th>Status</th><th>State</th><th>Summary</th><th>Updated</th><th>Action</th></tr></thead>
+              <tbody>
+                <tr><td><b>02076901</b></td><td><span class="badge green">NOC</span></td><td>noc_agent01</td><td><span class="badge yellow">Escalated</span></td><td>ESCALATE</td><td>VM password reset needs Operation check</td><td>02/07 12:52</td><td><button class="btn secondary sm">View</button></td></tr>
+                <tr><td><b>02076902</b></td><td><span class="badge green">NOC</span></td><td>admin</td><td><span class="badge blue">Closed</span></td><td>DRAFT</td><td>Billing screenshot clarification and reply</td><td>02/07 13:22</td><td><button class="btn secondary sm">View</button></td></tr>
+                <tr><td><b>02076911</b></td><td><span class="badge violet">Operation</span></td><td>op_user01</td><td><span class="badge blue">In Progress</span></td><td>RESEARCH</td><td>app2 memory spike after deploy</td><td>02/07 14:07</td><td><button class="btn secondary sm">Resume</button></td></tr>
+                <tr><td><b>02076912</b></td><td><span class="badge violet">Operation</span></td><td>admin</td><td><span class="badge green">Closed</span></td><td>DIAGNOSE</td><td>nginx 502 upstream timeout</td><td>02/07 11:35</td><td><button class="btn secondary sm">View</button></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="page-settings" class="page">
+        <div class="settings-layout">
+          <div class="settings-tabs">
+            <button class="active" data-tab="agents" onclick="showSettingsTab('agents')">Agent Configuration</button>
+            <button data-tab="git" onclick="showSettingsTab('git')">Git Sync</button>
+            <button data-tab="kbauto" onclick="showSettingsTab('kbauto')">KB Auto-Generate</button>
+            <button data-tab="deploy" onclick="showSettingsTab('deploy')">Deploy</button>
+            <button data-tab="users" onclick="showSettingsTab('users')">User Management</button>
+          </div>
+
+          <div class="settings-card">
+            <div id="settings-agents" class="settings-panel active">
+              <div class="section-title">
+                <div><h2>Agent Configuration</h2><p>คง pattern เดิมของ app2: NOC และ Operation แยก prompt profile และ model setting</p></div>
+                <button class="btn primary sm">Save Settings</button>
+              </div>
+              <div class="settings-grid">
+                <div class="setting-box">
+                  <h3>NOC Agent</h3>
+                  <div class="setting-row"><div><div class="setting-label">Model</div><div class="setting-help">Primary free hosted inference</div></div><span class="badge green">qwen/qwen3-32b</span></div>
+                  <div class="setting-row"><div><div class="setting-label">Clarify Max Rounds</div><div class="setting-help">v2.1.0</div></div><span>2</span></div>
+                </div>
+                <div class="setting-box">
+                  <h3>Operation Agent</h3>
+                  <div class="setting-row"><div><div class="setting-label">Research Order</div><div class="setting-help">Sequential, not parallel</div></div><span>KB to OpenCode to Docker</span></div>
+                  <div class="setting-row"><div><div class="setting-label">OpenCode Timeout</div><div class="setting-help">v2.2.0</div></div><span>120s</span></div>
+                </div>
+                <div class="setting-box wide">
+                  <h3>Runtime Providers</h3>
+                  <div class="setting-row"><div><div class="setting-label">Groq Primary</div><div class="setting-help">Configured from server-side env/settings</div></div><span class="badge green">ready</span></div>
+                  <div class="setting-row"><div><div class="setting-label">Ollama Fallback</div><div class="setting-help">qwen3:4b local fallback</div></div><span class="badge violet">ready</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div id="settings-git" class="settings-panel">
+              <div class="section-title">
+                <div><h2>Git Sync</h2><p>Existing knowledge repository sync controls remain available for admin</p></div>
+                <button class="btn secondary sm">Refresh Status</button>
+              </div>
+              <div class="settings-grid">
+                <div class="setting-box wide">
+                  <div class="setting-row"><div><div class="setting-label">Repository</div><div class="setting-help">Knowledge source</div></div><span>/root/openstack-support</span></div>
+                  <div class="setting-row"><div><div class="setting-label">Branch</div><div class="setting-help">Default sync target</div></div><span>main</span></div>
+                  <div class="setting-row"><div><div class="setting-label">Last Sync</div><div class="setting-help">Pull and index rebuild</div></div><span class="badge green">02/07 09:00</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div id="settings-kbauto" class="settings-panel">
+              <div class="section-title">
+                <div><h2>KB Auto-Generate</h2><p>v2.3.0 generates YAML summaries from closed cases and pushes only auto-generated files</p></div>
+                <button class="btn primary sm">Generate & Push Now</button>
+              </div>
+              <div class="settings-grid">
+                <div class="setting-box">
+                  <h3>Schedule</h3>
+                  <div class="setting-row"><div><div class="setting-label">Enable daily generation</div><div class="setting-help">Default off until admin enables</div></div><span class="toggle on"></span></div>
+                  <div class="setting-row"><div><div class="setting-label">Run Time</div><div class="setting-help">Server timezone</div></div><span>23:59</span></div>
+                  <div class="setting-row"><div><div class="setting-label">Date Range</div><div class="setting-help">Manual run default today</div></div><span>Today</span></div>
+                </div>
+                <div class="setting-box">
+                  <h3>Status</h3>
+                  <div class="setting-row"><div><div class="setting-label">Current Status</div><div class="setting-help">DB lock prevents duplicate run</div></div><span class="badge green">Idle</span></div>
+                  <div class="setting-row"><div><div class="setting-label">Last Run</div><div class="setting-help">23 cases to YAML</div></div><span>02/07 23:59</span></div>
+                  <div class="setting-row"><div><div class="setting-label">Last Push</div><div class="setting-help">auto-generated/ only</div></div><span class="badge green">Success</span></div>
+                </div>
+                <div class="setting-box wide">
+                  <h3>Last Run Log</h3>
+                  <div class="log-box">[23:59:00] acquired kb-auto lock
+[23:59:03] fetched closed cases: 23
+[00:01:12] wrote auto-generated/2026-07-02/daily-digest.yaml
+[00:01:14] wrote 23 case YAML files
+[00:01:20] git push origin main success</div>
+                </div>
+              </div>
+            </div>
+
+            <div id="settings-deploy" class="settings-panel">
+              <div class="section-title">
+                <div><h2>Deploy</h2><p>v2.4.0 one-click app2 deploy through deploy-agent sidecar and health check</p></div>
+                <button class="btn secondary sm">Check for Updates</button>
+              </div>
+              <div class="settings-grid">
+                <div class="setting-box">
+                  <h3>Version</h3>
+                  <div class="setting-row"><div><div class="setting-label">Current Version</div><div class="setting-help">From running app2</div></div><span class="badge blue">2.0.1</span></div>
+                  <div class="setting-row"><div><div class="setting-label">Latest Available</div><div class="setting-help">GitHub tags</div></div><span class="badge green">v2.4.0</span></div>
+                  <div class="setting-row"><div><div class="setting-label">Deploy Target</div><div class="setting-help">Admin enters tag</div></div><span>v2.4.0</span></div>
+                  <button class="btn primary block">Deploy v2.4.0</button>
+                </div>
+                <div class="setting-box">
+                  <h3>Health and Prompt Volume</h3>
+                  <div class="setting-row"><div><div class="setting-label">Health Endpoint</div><div class="setting-help">/app2/api/health</div></div><span class="badge green">OK</span></div>
+                  <div class="setting-row"><div><div class="setting-label">Prompt Volume</div><div class="setting-help">gate-answer-app2 mounted rw</div></div><span class="badge violet">Mounted</span></div>
+                  <div class="setting-row"><div><div class="setting-label">Rollback</div><div class="setting-help">On failed health check</div></div><span class="badge yellow">Ready</span></div>
+                </div>
+                <div class="setting-box wide">
+                  <h3>Deploy History</h3>
+                  <div class="deploy-timeline">
+                    <div class="deploy-item"><span>02/07 14:30</span><b>v2.0.1</b><span class="badge green">Success 45s</span></div>
+                    <div class="deploy-item"><span>01/07 09:15</span><b>v2.0.0</b><span class="badge green">Success 38s</span></div>
+                    <div class="deploy-item"><span>30/06 21:02</span><b>v1.10</b><span class="badge yellow">Rollback tested</span></div>
+                  </div>
+                </div>
+                <div class="setting-box wide">
+                  <h3>Deploy Log</h3>
+                  <div class="log-box">[deploy-agent] git fetch --tags
+[deploy-agent] git checkout v2.4.0
+[deploy-agent] docker compose build app2
+[deploy-agent] docker compose up -d app2
+[deploy-agent] wait 15s
+[deploy-agent] health check 200 OK
+[deploy-agent] deploy complete</div>
+                </div>
+              </div>
+            </div>
+
+            <div id="settings-users" class="settings-panel">
+              <div class="section-title">
+                <div><h2>User Management</h2><p>Admin manages NOC and Operation access</p></div>
+                <button class="btn primary sm">Add User</button>
+              </div>
+              <div class="table-card">
+                <table>
+                  <thead><tr><th>User</th><th>Role</th><th>Status</th><th>Default Page</th><th>Action</th></tr></thead>
+                  <tbody>
+                    <tr><td>admin</td><td><span class="badge green">admin</span></td><td>active</td><td>Admin Console</td><td><button class="btn secondary sm">Edit</button></td></tr>
+                    <tr><td>noc_agent01</td><td><span class="badge blue">noc</span></td><td>active</td><td>NOC Chat</td><td><button class="btn secondary sm">Edit</button></td></tr>
+                    <tr><td>op_user01</td><td><span class="badge violet">operation</span></td><td>active</td><td>Operation Chat</td><td><button class="btn secondary sm">Edit</button></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</section>
+
+<script>
+let selectedRole = 'admin';
+let currentRole = 'admin';
+
+const pageMeta = {
+  dashboard: {
+    title: 'Dashboard',
+    subtitle: 'Today overview and role-based work queue',
+    actions: '<span class="badge green"><span class="dot green"></span>All systems ready</span><button class="btn secondary sm" onclick="toggleCustomize()">Customize Dashboard</button>'
+  },
+  noc: {
+    title: 'NOC Chat',
+    subtitle: 'v2.1.0 - Clarify, Analyze, Draft, Escalate, Handoff',
+    actions: '<span class="badge green"><span class="dot green"></span>Groq qwen3-32b</span><button class="btn primary sm">New Case</button><button class="btn danger sm">ปิดเคส</button>'
+  },
+  operation: {
+    title: 'Operation Chat',
+    subtitle: 'v2.2.0 - Clarify, Research Progress, Diagnose',
+    actions: '<span class="badge blue"><span class="dot blue"></span>KB to OpenCode to Docker</span><button class="btn primary sm">New Case</button><button class="btn danger sm">ปิดเคส</button>'
+  },
+  history: {
+    title: 'Case History',
+    subtitle: 'Review, filter, resume, export, and inspect escalated cases',
+    actions: '<button class="btn secondary sm">Export Markdown</button><button class="btn secondary sm">Refresh</button>'
+  },
+  settings: {
+    title: 'Admin Console',
+    subtitle: 'Admin console for agents, git sync, KB automation, deploy, and users',
+    actions: '<span class="badge green">admin only</span><button class="btn secondary sm">Save View</button>'
+  }
+};
+
+const roleConfig = {
+  admin: {
+    username: 'admin',
+    roleLabel: 'admin',
+    roleBadge: 'green',
+    chip: 'Logged in as: admin<br>Role: full access',
+    nav: [
+      ['dashboard', 'D', 'Dashboard'],
+      ['noc', 'N', 'NOC Chat'],
+      ['operation', 'O', 'Operation Chat'],
+      ['history', 'H', 'Case History'],
+      ['settings', 'A', 'Admin Console']
+    ],
+    status: [
+      ['NOC', 'Clarify, attach, escalate, handoff'],
+      ['Operation', 'Research progress active'],
+      ['KB Auto', 'Daily generation ready'],
+      ['Deploy', 'Agent and health check ready']
+    ]
+  },
+  noc: {
+    username: 'noc_agent01',
+    roleLabel: 'noc',
+    roleBadge: 'blue',
+    chip: 'Logged in as: noc_agent01<br>Role: NOC support',
+    nav: [
+      ['dashboard', 'D', 'Dashboard'],
+      ['noc', 'N', 'NOC Chat'],
+      ['history', 'H', 'Case History']
+    ],
+    status: [
+      ['NOC', '2 active cases'],
+      ['Clarify', '1 case waiting for input'],
+      ['Draft', '1 response ready'],
+      ['Provider', 'Groq primary ready']
+    ]
+  },
+  operation: {
+    username: 'op_user01',
+    roleLabel: 'operation',
+    roleBadge: 'violet',
+    chip: 'Logged in as: op_user01<br>Role: Operation diagnostics',
+    nav: [
+      ['dashboard', 'D', 'Dashboard'],
+      ['operation', 'O', 'Operation Chat'],
+      ['history', 'H', 'Case History']
+    ],
+    status: [
+      ['Operation', '2 diagnostic cases'],
+      ['Research', 'OpenCode available'],
+      ['Docker', 'Read-only tools ready'],
+      ['KB', 'Knowledge search ready']
+    ]
+  }
+};
+
+const dashboardData = {
+  admin: {
+    greeting: 'สวัสดี admin',
+    intro: 'ภาพรวมระบบ, งานค้าง, automation และ action ที่ควรทำวันนี้',
+    metrics: [
+      ['Open Cases', '7', 'NOC 4, Operation 3', 'blue'],
+      ['Escalated', '2', 'ต้องติดตาม Operation', 'yellow'],
+      ['Provider', 'Ready', 'Groq primary, Ollama fallback', 'green'],
+      ['Deploy', 'v2.0.1', 'latest available v2.4.0', 'violet']
+    ],
+    queue: [
+      ['02076901', 'NOC', 'VM password reset waiting Operation', 'Resume'],
+      ['02076911', 'Operation', 'app2 memory spike research running', 'Open'],
+      ['KB Auto', 'Admin', 'Daily generation enabled at 23:59', 'Review'],
+      ['Deploy', 'Admin', 'v2.4.0 update available', 'Check']
+    ],
+    actions: [
+      ['Open Admin Console', 'settings', 'primary'],
+      ['Check Deploy', 'settings', 'violet'],
+      ['Generate KB', 'settings', 'blue'],
+      ['View History', 'history', 'secondary']
+    ]
+  },
+  noc: {
+    greeting: 'สวัสดี NOC',
+    intro: 'โฟกัสเคสลูกค้าที่ต้องตอบ, เคสที่ต้อง clarify และ draft ที่พร้อมใช้งาน',
+    metrics: [
+      ['My Open Cases', '3', 'กำลังดำเนินการอยู่', 'blue'],
+      ['Waiting Clarify', '1', 'ต้องถามข้อมูลลูกค้าเพิ่ม', 'yellow'],
+      ['Draft Ready', '1', 'พร้อม copy ส่งลูกค้า', 'green'],
+      ['Escalated Today', '1', 'ส่ง Operation แล้ว', 'violet']
+    ],
+    queue: [
+      ['02076901', 'Clarify', 'ลูกค้าลืม password ต้องแยก portal หรือ VM', 'ทำต่อ'],
+      ['02076902', 'Draft', 'Billing screenshot มีร่างคำตอบแล้ว', 'Copy'],
+      ['02076903', 'Chat', 'รอข้อมูล project และ VM name', 'ทำต่อ']
+    ],
+    actions: [
+      ['New NOC Case', 'noc', 'primary'],
+      ['Resume Last Case', 'noc', 'secondary'],
+      ['View Escalated', 'history', 'warn'],
+      ['Export Today', 'history', 'blue']
+    ]
+  },
+  operation: {
+    greeting: 'สวัสดี Operation',
+    intro: 'ดูเคสที่ NOC ส่งต่อ, งาน research ที่กำลังรัน และ diagnosis ที่ต้องปิดวันนี้',
+    metrics: [
+      ['Assigned Cases', '4', 'รวมเคสส่งต่อจาก NOC', 'blue'],
+      ['Research Running', '1', 'KB to OpenCode to Docker', 'violet'],
+      ['Diagnosis Pending', '2', 'รอสรุป action', 'yellow'],
+      ['System Warnings', '1', 'app2 memory spike', 'red']
+    ],
+    queue: [
+      ['02076911', 'Research', 'app2 memory spike หลัง deploy ล่าสุด', 'Open'],
+      ['02076901', 'Escalated', 'VM password reset ต้องตรวจสอบขั้นตอน', 'Open'],
+      ['02076912', 'Diagnose', 'nginx 502 intermittent', 'Review']
+    ],
+    actions: [
+      ['New Operation Case', 'operation', 'primary'],
+      ['Open Escalations', 'history', 'warn'],
+      ['Attach Logs', 'operation', 'secondary'],
+      ['View History', 'history', 'blue']
+    ]
+  }
+};
+
+function selectRole(role) {
+  selectedRole = role;
+  document.querySelectorAll('.role-option').forEach((button) => {
+    button.classList.toggle('active', button.dataset.role === role);
+  });
+  const username = roleConfig[role].username;
+  document.getElementById('usernameInput').value = username;
+}
+
+function enterApp() {
+  currentRole = selectedRole;
+  document.getElementById('loginScreen').classList.remove('active');
+  document.getElementById('appScreen').classList.add('active');
+  renderRoleShell();
+  renderDashboard();
+  showPage('dashboard');
+}
+
+function backToLogin() {
+  document.getElementById('appScreen').classList.remove('active');
+  document.getElementById('loginScreen').classList.add('active');
+}
+
+function renderRoleShell() {
+  const config = roleConfig[currentRole];
+  document.getElementById('sidebarUserChip').innerHTML = config.chip;
+  document.getElementById('footerUserLabel').textContent = config.username;
+  const roleBadge = document.getElementById('footerRoleBadge');
+  roleBadge.textContent = config.roleLabel;
+  roleBadge.className = `badge ${config.roleBadge}`;
+
+  document.getElementById('sideNav').innerHTML = config.nav.map(([page, icon, label]) => (
+    `<button data-page="${page}" onclick="showPage('${page}')"><span class="nav-icon">${icon}</span>${label}</button>`
+  )).join('');
+
+  const mobileNav = document.getElementById('mobileNav');
+  mobileNav.innerHTML = config.nav.map(([page, , label]) => `<option value="${page}">${label}</option>`).join('');
+
+  document.getElementById('systemStatusList').innerHTML = config.status.map(([name, detail]) => (
+    `<div class="version-step"><span class="step-dot"></span><span><b>${name}</b> ${detail}</span></div>`
+  )).join('');
+}
+
+function hasPageAccess(pageId) {
+  return roleConfig[currentRole].nav.some(([page]) => page === pageId);
+}
+
+function renderDashboard() {
+  const data = dashboardData[currentRole];
+  document.getElementById('dashboardGreeting').textContent = data.greeting;
+  document.getElementById('dashboardIntro').textContent = data.intro;
+  document.getElementById('dashboardMetrics').innerHTML = data.metrics.map(([label, value, help, color]) => (
+    `<div class="dash-card"><h3>${label} <span class="badge ${color}">${currentRole}</span></h3><div class="dash-value">${value}</div><div class="dash-help">${help}</div></div>`
+  )).join('');
+  document.getElementById('dashboardQueue').innerHTML = data.queue.map(([id, module, summary, action]) => (
+    `<div class="dash-row"><b>${id}</b><span>${module}<br>${summary}</span><button class="btn secondary sm">${action}</button></div>`
+  )).join('');
+  document.getElementById('queueCount').textContent = `${data.queue.length} items`;
+  document.getElementById('dashboardActions').innerHTML = data.actions.map(([label, page, variant]) => (
+    `<button class="btn ${variant} sm" onclick="showPage('${page}')">${label}</button>`
+  )).join('');
+}
+
+function toggleCustomize() {
+  const panel = document.getElementById('customizePanel');
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+}
+
+function showPage(pageId) {
+  if (!hasPageAccess(pageId)) pageId = 'dashboard';
+  document.querySelectorAll('.page').forEach((page) => page.classList.remove('active'));
+  const page = document.getElementById('page-' + pageId);
+  if (page) page.classList.add('active');
+
+  document.querySelectorAll('.nav button[data-page]').forEach((button) => {
+    button.classList.toggle('active', button.dataset.page === pageId);
+  });
+
+  const meta = pageMeta[pageId];
+  if (meta) {
+    document.getElementById('pageTitle').textContent = meta.title;
+    document.getElementById('pageSubtitle').textContent = meta.subtitle;
+    document.getElementById('pageActions').innerHTML = meta.actions;
+  }
+  const mobileNav = document.getElementById('mobileNav');
+  if (mobileNav) mobileNav.value = pageId;
+}
+
+function showSettingsTab(tabId) {
+  document.querySelectorAll('.settings-panel').forEach((panel) => panel.classList.remove('active'));
+  const panel = document.getElementById('settings-' + tabId);
+  if (panel) panel.classList.add('active');
+
+  document.querySelectorAll('.settings-tabs button').forEach((button) => {
+    button.classList.toggle('active', button.dataset.tab === tabId);
+  });
+}
+</script>
+</body>
+</html>

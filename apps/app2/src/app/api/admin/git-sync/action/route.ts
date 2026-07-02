@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
     
     const { action, repoUrl, branch, confirm } = await request.json();
 
-    const allowedActions = ['check_status', 'pull_latest', 'force_reset_pull', 'reclone', 'change_repo'];
+    const allowedActions = ['check_status', 'pull_latest', 'force_reset_pull', 'reclone', 'change_repo', 'push_auto_generated'];
     if (!action || !allowedActions.includes(action)) {
       return NextResponse.json({ error: `Invalid action: ${action}` }, { status: 400 });
     }

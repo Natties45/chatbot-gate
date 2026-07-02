@@ -4,10 +4,10 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { AppLayout } from '@/components/layout/AppLayout/AppLayout';
 import { Button } from '@/components/ui/Button/Button';
-import { Settings, GitBranch, Users, LogOut, ChevronDown, ChevronUp, AlertTriangle, Plus, Edit, Trash2 } from 'lucide-react';
+import { Settings, GitBranch, Users, LogOut, ChevronDown, ChevronUp, AlertTriangle, Plus, Edit, Trash2, BookOpen, Rocket } from 'lucide-react';
 import { apiUrl } from '@/lib/api';
 
-type TabType = 'agents' | 'git' | 'users';
+type TabType = 'agents' | 'git' | 'kbauto' | 'deploy' | 'users';
 
 interface UserRecord {
   id: string;
@@ -24,6 +24,24 @@ interface GitSyncStatus {
   lastCommit: string;
   status: string;
   lastLog: string;
+}
+
+interface KbAutoStatus {
+  enabled: boolean;
+  scheduleTime: string;
+  running: boolean;
+  lastRunAt: string;
+  lastResult: string;
+  lastError: string;
+  lastLog: string;
+}
+
+interface DeployStatus {
+  currentVersion?: string;
+  latestTag?: string;
+  updateAvailable?: boolean;
+  repoStatus?: string;
+  deploys?: Array<{ tag: string; status: string; timestamp: string; duration?: number; error?: string }>;
 }
 
 export default function SettingsPage() {
@@ -53,6 +71,18 @@ export default function SettingsPage() {
   const [gitRepoUrlInput, setGitRepoUrlInput] = useState('');
   const [gitBranchInput, setGitBranchInput] = useState('');
   const [showRepoChangeModal, setShowRepoChangeModal] = useState(false);
+
+  // KB Auto State
+  const [kbAutoStatus, setKbAutoStatus] = useState<KbAutoStatus | null>(null);
+  const [kbAutoEnabled, setKbAutoEnabled] = useState(false);
+  const [kbAutoSchedule, setKbAutoSchedule] = useState('23:59');
+  const [kbAutoLoading, setKbAutoLoading] = useState(false);
+
+  // Deploy State
+  const [deployStatus, setDeployStatus] = useState<DeployStatus | null>(null);
+  const [deployTarget, setDeployTarget] = useState('v2.4.0');
+  const [deployLog, setDeployLog] = useState('No deploy logs available.');
+  const [deployLoading, setDeployLoading] = useState(false);
 
   // User Management State
   const [users, setUsers] = useState<UserRecord[]>([]);
@@ -115,10 +145,51 @@ export default function SettingsPage() {
     }
   }
 
+  async function fetchKbAutoStatus() {
+    try {
+      const res = await fetch(apiUrl('/api/admin/kb-auto/status'));
+      if (res.ok) {
+        const data = await res.json();
+        setKbAutoStatus(data);
+        setKbAutoEnabled(Boolean(data.enabled));
+        setKbAutoSchedule(data.scheduleTime || '23:59');
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async function fetchDeployStatus() {
+    try {
+      const [statusRes, historyRes] = await Promise.all([
+        fetch(apiUrl('/api/admin/deploy'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'status' }),
+        }),
+        fetch(apiUrl('/api/admin/deploy'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'history' }),
+        }),
+      ]);
+
+      const status = statusRes.ok ? await statusRes.json() : {};
+      const history = historyRes.ok ? await historyRes.json() : {};
+      setDeployStatus({ ...status, ...history });
+      if (status.latestTag) setDeployTarget(status.latestTag);
+    } catch (err) {
+      console.error(err);
+      setDeployLog('Deploy agent is unavailable. Start deploy-agent in Docker before using deploy actions.');
+    }
+  }
+
   useEffect(() => {
     fetchSettingsAndConfig();
     fetchUsers();
     fetchGitStatus();
+    fetchKbAutoStatus();
+    fetchDeployStatus();
   }, []);
 
   // Save Agent Settings
@@ -187,6 +258,64 @@ export default function SettingsPage() {
       setError(message);
     } finally {
       setGitLoading(false);
+    }
+  };
+
+  // User management operations
+  const handleKbAutoAction = async (action: 'save_settings' | 'generate') => {
+    setError('');
+    setSuccess('');
+    setKbAutoLoading(true);
+
+    try {
+      const res = await fetch(apiUrl('/api/admin/kb-auto/generate'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action,
+          enabled: kbAutoEnabled,
+          scheduleTime: kbAutoSchedule,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || data.message || 'KB auto action failed');
+      setSuccess(action === 'save_settings' ? 'KB auto settings saved.' : `KB generated: ${data.cases || 0} cases`);
+      await fetchKbAutoStatus();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'KB auto action failed';
+      setError(message);
+    } finally {
+      setKbAutoLoading(false);
+    }
+  };
+
+  const handleDeployAction = async (action: 'status' | 'history' | 'deploy') => {
+    setError('');
+    setSuccess('');
+    setDeployLoading(true);
+
+    try {
+      if (action === 'deploy' && !confirm(`Deploy app2 to ${deployTarget}? This will build and restart app2 on the server.`)) {
+        return;
+      }
+
+      const res = await fetch(apiUrl('/api/admin/deploy'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, tag: deployTarget }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Deploy action failed');
+
+      setDeployLog(data.log || JSON.stringify(data, null, 2));
+      setSuccess(action === 'deploy' ? `Deploy completed for ${deployTarget}` : 'Deploy status refreshed.');
+      await fetchDeployStatus();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Deploy action failed';
+      setError(message);
+      setDeployLog(message);
+    } finally {
+      setDeployLoading(false);
     }
   };
 
@@ -318,6 +447,20 @@ export default function SettingsPage() {
           >
             <GitBranch size={18} />
             <span>Git Sync</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('kbauto')}
+            style={activeTab === 'kbauto' ? styles.activeTabButton : styles.tabButton}
+          >
+            <BookOpen size={18} />
+            <span>KB Auto-Generate</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('deploy')}
+            style={activeTab === 'deploy' ? styles.activeTabButton : styles.tabButton}
+          >
+            <Rocket size={18} />
+            <span>Deploy</span>
           </button>
           <button
             onClick={() => setActiveTab('users')}
@@ -556,7 +699,91 @@ export default function SettingsPage() {
             </div>
           )}
 
-          {/* TAB 3: User Management */}
+          {/* TAB 3: KB Auto-Generate */}
+          {activeTab === 'kbauto' && (
+            <div style={styles.gitContainer}>
+              <div style={styles.sectionHeaderRow}>
+                <div>
+                  <h2 style={styles.sectionTitle}>KB Auto-Generate</h2>
+                  <p style={styles.sectionHelp}>สร้าง YAML summary จาก closed cases และ push เฉพาะ auto-generated/</p>
+                </div>
+                <Button variant="primary" disabled={kbAutoLoading} onClick={() => handleKbAutoAction('generate')}>
+                  {kbAutoLoading ? 'Generating...' : 'Generate & Push Now'}
+                </Button>
+              </div>
+              <div style={styles.gitGrid}>
+                <div style={styles.settingBox}>
+                  <h3 style={styles.boxTitle}>Schedule</h3>
+                  <div style={styles.infoRow}><span>Daily generation</span><label><input type="checkbox" checked={kbAutoEnabled} onChange={(e) => setKbAutoEnabled(e.target.checked)} /> Enabled</label></div>
+                  <div style={styles.infoRow}><span>Run time</span><input type="time" value={kbAutoSchedule} onChange={(e) => setKbAutoSchedule(e.target.value)} style={styles.input} /></div>
+                  <div style={styles.infoRow}><span>Duplicate protection</span><strong>DB lock</strong></div>
+                  <Button variant="secondary" size="sm" onClick={() => handleKbAutoAction('save_settings')} disabled={kbAutoLoading}>Save Schedule</Button>
+                </div>
+                <div style={styles.settingBox}>
+                  <h3 style={styles.boxTitle}>Status</h3>
+                  <div style={styles.infoRow}><span>Current status</span><strong>{kbAutoStatus?.running ? 'Running' : 'Idle'}</strong></div>
+                  <div style={styles.infoRow}><span>Last run</span><strong>{kbAutoStatus?.lastRunAt ? new Date(kbAutoStatus.lastRunAt).toLocaleString('th-TH') : 'Never'}</strong></div>
+                  <div style={styles.infoRow}><span>Last error</span><strong>{kbAutoStatus?.lastError || '-'}</strong></div>
+                  <div style={styles.infoRow}><span>Output folder</span><code>auto-generated/YYYY-MM-DD/</code></div>
+                  <div style={styles.infoRow}><span>Push scope</span><strong>auto-generated/ only</strong></div>
+                </div>
+              </div>
+              <div style={styles.logBox}>
+                <pre style={styles.logText}>{kbAutoStatus?.lastLog || 'No KB auto logs available.'}</pre>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 4: Deploy */}
+          {activeTab === 'deploy' && (
+            <div style={styles.gitContainer}>
+              <div style={styles.sectionHeaderRow}>
+                <div>
+                  <h2 style={styles.sectionTitle}>Deploy</h2>
+                  <p style={styles.sectionHelp}>one-click app2 deploy ผ่าน deploy-agent sidecar หลัง verify code ครบ</p>
+                </div>
+                <Button variant="secondary" disabled={deployLoading} onClick={() => handleDeployAction('status')}>
+                  {deployLoading ? 'Checking...' : 'Check for Updates'}
+                </Button>
+              </div>
+              <div style={styles.gitGrid}>
+                <div style={styles.settingBox}>
+                  <h3 style={styles.boxTitle}>Version</h3>
+                  <div style={styles.infoRow}><span>Current version</span><strong>{deployStatus?.currentVersion || '2.0.1'}</strong></div>
+                  <div style={styles.infoRow}><span>Latest available</span><strong>{deployStatus?.latestTag || 'Unavailable'}</strong></div>
+                  <div style={styles.infoRow}><span>Deploy target</span><input value={deployTarget} onChange={(e) => setDeployTarget(e.target.value)} style={styles.input} /></div>
+                  <Button variant="primary" disabled={deployLoading || !deployTarget} onClick={() => handleDeployAction('deploy')} style={{ marginTop: '12px' }}>
+                    {deployLoading ? 'Deploying...' : `Deploy ${deployTarget}`}
+                  </Button>
+                </div>
+                <div style={styles.settingBox}>
+                  <h3 style={styles.boxTitle}>Health and Prompt Volume</h3>
+                  <div style={styles.infoRow}><span>Health endpoint</span><strong>/app2/api/health</strong></div>
+                  <div style={styles.infoRow}><span>Prompt volume</span><strong>Configured rw</strong></div>
+                  <div style={styles.infoRow}><span>Rollback</span><strong>Health-check guarded</strong></div>
+                  <div style={styles.infoRow}><span>Agent status</span><strong>{deployStatus?.repoStatus || 'Unknown'}</strong></div>
+                </div>
+              </div>
+              <div style={styles.settingBox}>
+                <h3 style={styles.boxTitle}>Deploy History</h3>
+                {(deployStatus?.deploys || []).length === 0 ? (
+                  <p style={{ color: 'var(--text-muted)', fontSize: '12px' }}>No deploy history available.</p>
+                ) : (
+                  (deployStatus?.deploys || []).map((item) => (
+                    <div key={`${item.tag}-${item.timestamp}`} style={styles.infoRow}>
+                      <span>{new Date(item.timestamp).toLocaleString('th-TH')}</span>
+                      <strong>{item.tag} - {item.status}</strong>
+                    </div>
+                  ))
+                )}
+              </div>
+              <div style={styles.logBox}>
+                <pre style={styles.logText}>{deployLog}</pre>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 5: User Management */}
           {activeTab === 'users' && (
             <div style={styles.usersContainer}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
@@ -800,6 +1027,20 @@ const styles = {
     marginBottom: '20px',
     color: 'var(--text-color)',
   },
+  sectionHeaderRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: '16px',
+    marginBottom: '16px',
+    flexWrap: 'wrap' as const,
+  },
+  sectionHelp: {
+    color: 'var(--text-muted)',
+    fontSize: '12px',
+    marginTop: '-12px',
+    lineHeight: 1.5,
+  },
   errorBanner: {
     backgroundColor: 'rgba(239, 68, 68, 0.1)',
     border: '1px solid var(--danger-color)',
@@ -885,6 +1126,14 @@ const styles = {
     marginTop: '12px',
     paddingTop: '12px',
     borderTop: '1px solid var(--border-color)',
+  },
+  infoRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    gap: '12px',
+    padding: '10px 0',
+    borderBottom: '1px solid var(--border-color)',
+    fontSize: '13px',
   },
   saveBtn: {
     alignSelf: 'flex-start',

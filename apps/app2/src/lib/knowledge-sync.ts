@@ -174,8 +174,9 @@ export async function rebuildKnowledgeIndex(): Promise<KnowledgeSyncStatus> {
 
 export async function executeKnowledgeSyncAction(
   action: 'check_status' | 'pull_latest' | 'rebuild_index',
-  adminUsername: string
+  _adminUsername: string
 ): Promise<KnowledgeSyncStatus> {
+  void _adminUsername;
   const settings = await getSettings();
   const repoPath = settings['knowledge.repoPath'] || process.env.KNOWLEDGE_REPO_PATH || '/root/openstack-support';
 

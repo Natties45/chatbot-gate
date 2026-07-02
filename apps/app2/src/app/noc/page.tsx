@@ -3,17 +3,23 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { AppLayout } from '@/components/layout/AppLayout/AppLayout';
 import { Button } from '@/components/ui/Button/Button';
-import { Plus, Send, Copy, AlertTriangle, RefreshCw } from 'lucide-react';
+import { Plus, Send, Copy, AlertTriangle, RefreshCw, Paperclip, X } from 'lucide-react';
 import { apiUrl } from '@/lib/api';
 
 type PageState = 'idle' | 'chat' | 'offline' | 'loading';
-type NocState = 1 | 2 | 3;
+type NocState = 'clarify' | 'analyze' | 'chat' | 'draft' | 'escalate';
 
 interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
   content: string;
-  kind: 'message' | 'draft';
+  kind: 'message' | 'draft' | 'escalate' | 'handoff';
+}
+
+interface AttachedFile {
+  name: string;
+  path: string;
+  content?: string;
 }
 
 interface CaseRecord {
@@ -46,17 +52,19 @@ interface NocMessageItem {
 
 export default function NocPage() {
   const router = useRouter();
-  const [user, setUser] = useState<UserProfile | null>(null);
   const [pageState, setPageState] = useState<PageState>('loading');
-  const [nocState, setNocState] = useState<NocState>(1);
+  const [nocState, setNocState] = useState<NocState>('clarify');
+  const [clarifyRounds, setClarifyRounds] = useState(0);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [dbCaseId, setDbCaseId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
+  const [attachedFile, setAttachedFile] = useState<AttachedFile | null>(null);
   const [error, setError] = useState('');
   const [sending, setSending] = useState(false);
   const [history, setHistory] = useState<CaseRecord[]>([]);
   const msgsEnd = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [copied, setCopied] = useState(false);
 
   async function loadHistory() {
@@ -84,8 +92,6 @@ export default function NocPage() {
           router.push('/login');
           return;
         }
-        setUser(profile);
-        
         // Load active history
         await loadHistory();
         setPageState('idle');
@@ -105,9 +111,11 @@ export default function NocPage() {
     setSessionId(null);
     setDbCaseId(null);
     setMessages([]);
-    setNocState(1);
+    setNocState('clarify');
+    setClarifyRounds(0);
     setError('');
     setInput('');
+    setAttachedFile(null);
     loadHistory();
   }
 
@@ -134,8 +142,10 @@ export default function NocPage() {
     setError('');
     setPageState('loading');
     setMessages([]);
-    setNocState(1);
+    setNocState('clarify');
+    setClarifyRounds(0);
     setInput('');
+    setAttachedFile(null);
     try {
       const data = await apiCall('init');
       setSessionId(data.sessionId || null);
@@ -152,14 +162,19 @@ export default function NocPage() {
     if (!input.trim() || !sessionId || sending) return;
     const msg = input.trim();
     setInput('');
+    setAttachedFile(null);
     
-    const userMsg: ChatMessage = { id: Date.now().toString(), role: 'user', content: msg, kind: 'message' };
+    const finalMsg = attachedFile
+      ? `${attachedFile.content ? `[แนบแล้ว: ${attachedFile.name}]\n${attachedFile.content}` : `[แนบไฟล์: ${attachedFile.name}] ${attachedFile.path}`}\n\n${msg}`
+      : msg;
+
+    const userMsg: ChatMessage = { id: Date.now().toString(), role: 'user', content: finalMsg, kind: 'message' };
     setMessages((p) => [...p, userMsg]);
 
-    const promptType = nocState === 1 ? 'analyze' : 'chat';
+    const promptType = nocState === 'clarify' ? 'clarify' : nocState === 'analyze' ? 'analyze' : 'chat';
     setSending(true);
     try {
-      const extra: Record<string, unknown> = { promptType, message: msg };
+      const extra: Record<string, unknown> = { promptType, message: finalMsg };
       
       // Pass recent history to the app2 AI brain for context
       if (messages.length > 0) {
@@ -176,8 +191,10 @@ export default function NocPage() {
       
       setMessages((prev) => [...prev, aiMsg]);
 
-      if (promptType === 'analyze') {
-        setNocState(2);
+      if (promptType === 'clarify') {
+        setClarifyRounds((rounds) => Math.min(rounds + 1, 2));
+      } else if (promptType === 'analyze') {
+        setNocState('chat');
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Unknown error';
@@ -189,7 +206,7 @@ export default function NocPage() {
   }
 
   async function handleDraft() {
-    if (nocState < 2 || !sessionId || sending) return;
+    if (!sessionId || sending) return;
     
     setSending(true);
     try {
@@ -202,7 +219,7 @@ export default function NocPage() {
       };
       
       setMessages((p) => [...p, aiMsg]);
-      setNocState(3);
+      setNocState('draft');
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Unknown error';
       setError(message);
@@ -212,17 +229,77 @@ export default function NocPage() {
     }
   }
 
-  function getLatestDraft(): string {
+  async function handleAnalyze() {
+    if (!sessionId || sending) return;
+
+    setSending(true);
+    try {
+      const data = await apiCall('message', {
+        promptType: 'analyze',
+        message: 'Analyze the clarified NOC case using recent conversation context.',
+        history: messages.map((m) => ({ role: m.role, content: m.content })),
+      });
+      setMessages((p) => [...p, { id: Date.now().toString(), role: 'assistant', content: data.response, kind: 'message' }]);
+      setNocState('chat');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      setError(message);
+      setPageState('offline');
+    } finally {
+      setSending(false);
+    }
+  }
+
+  async function handleEscalate() {
+    if (!sessionId || sending) return;
+    setSending(true);
+    try {
+      const data = await apiCall('message', {
+        promptType: 'escalate',
+        message: 'Generate an Operation escalation summary for this NOC case.',
+        history: messages.map((m) => ({ role: m.role, content: m.content })),
+      });
+      setMessages((p) => [...p, { id: Date.now().toString(), role: 'assistant', content: data.response, kind: 'escalate' }]);
+      setNocState('escalate');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      setError(message);
+      setPageState('offline');
+    } finally {
+      setSending(false);
+    }
+  }
+
+  async function handleHandoff() {
+    if (!sessionId || sending) return;
+    setSending(true);
+    try {
+      const data = await apiCall('message', {
+        promptType: 'email',
+        message: 'Generate a handoff template for this NOC case.',
+        history: messages.map((m) => ({ role: m.role, content: m.content })),
+      });
+      setMessages((p) => [...p, { id: Date.now().toString(), role: 'assistant', content: data.response, kind: 'handoff' }]);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      setError(message);
+      setPageState('offline');
+    } finally {
+      setSending(false);
+    }
+  }
+
+  function getLatestActionText(): string {
     for (let i = messages.length - 1; i >= 0; i--) {
-      if (messages[i].kind === 'draft') return messages[i].content;
+      if (messages[i].kind === 'draft' || messages[i].kind === 'escalate' || messages[i].kind === 'handoff') return messages[i].content;
     }
     return '';
   }
 
   function handleCopy() {
-    const draft = getLatestDraft();
-    if (draft) {
-      navigator.clipboard.writeText(draft);
+    const text = getLatestActionText();
+    if (text) {
+      navigator.clipboard.writeText(text);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
@@ -273,16 +350,18 @@ export default function NocPage() {
         id: m.id,
         role: m.role === 'user' ? 'user' : 'assistant',
         content: m.content,
-        kind: (m.kind === 'draft' ? 'draft' : 'message') as 'message' | 'draft'
+        kind: (m.kind === 'draft' || m.kind === 'escalate' || m.kind === 'handoff' ? m.kind : 'message') as ChatMessage['kind']
       }));
       
       setMessages(mappedMessages);
 
-      let newState: NocState = 1;
+      let newState: NocState = 'clarify';
       if (mappedMessages.some((m) => m.kind === 'draft')) {
-        newState = 3;
+        newState = 'draft';
+      } else if (mappedMessages.some((m) => m.kind === 'escalate')) {
+        newState = 'escalate';
       } else if (mappedMessages.length >= 2) {
-        newState = 2;
+        newState = 'chat';
       }
       
       setNocState(newState);
@@ -307,6 +386,44 @@ export default function NocPage() {
     </div>
   );
 
+  function extractOptions(content: string): string[] {
+    const options: string[] = [];
+    const optionRegex = /^\[(\d+)\]\s+(.+)$/gm;
+    let match: RegExpExecArray | null;
+    while ((match = optionRegex.exec(content)) !== null) {
+      options.push(`[${match[1]}] ${match[2]}`);
+    }
+    return options;
+  }
+
+  async function handleOptionClick(option: string) {
+    setInput(option);
+  }
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !sessionId) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('caseId', dbCaseId || sessionId);
+
+    try {
+      const res = await fetch(apiUrl('/api/upload'), {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Upload failed');
+      setAttachedFile({ name: data.name, path: data.path, content: data.content });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Upload failed';
+      setError(message);
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  }
+
   if (pageState === 'loading') {
     return (
       <AppLayout title="NOC Chat">
@@ -320,6 +437,7 @@ export default function NocPage() {
 
   return (
     <AppLayout title="NOC Chat" headerAction={headerAction} onSidebarActiveClick={handleSidebarClick}>
+      <input ref={fileInputRef} type="file" accept=".txt,image/png,image/jpeg,image/gif,image/webp" style={{ display: 'none' }} onChange={handleFileChange} />
       {pageState === 'offline' && (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: '16px' }}>
           <AlertTriangle size={48} style={{ color: 'var(--danger-color)' }} />
@@ -364,15 +482,26 @@ export default function NocPage() {
           <div className="chatArea">
             {messages.length === 0 && (
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, color: 'var(--text-muted)', fontSize: '14px' }}>
-                พิมพ์ข้อความจากลูกค้าเพื่อเริ่มวิเคราะห์
+                พิมพ์ข้อความจากลูกค้าเพื่อเริ่ม clarify ก่อนวิเคราะห์
               </div>
             )}
             {messages.map((m) => (
               <div key={m.id} className={`messageBubble ${m.role === 'user' ? 'userBubble' : 'assistantBubble'}`}>
-                {m.kind === 'draft' ? (
+                {m.kind === 'draft' || m.kind === 'escalate' || m.kind === 'handoff' ? (
                   <div className="draftCard">{m.content}</div>
                 ) : (
-                  <span>{m.content}</span>
+                  <>
+                    <span>{m.content}</span>
+                    {m.role === 'assistant' && nocState === 'clarify' && extractOptions(m.content).length > 0 && (
+                      <div className="optionGrid">
+                        {extractOptions(m.content).map((option) => (
+                          <button key={option} type="button" className="optionButton" onClick={() => handleOptionClick(option)}>
+                            {option}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             ))}
@@ -387,11 +516,17 @@ export default function NocPage() {
 
           <div className="quickActionBar">
             <div className="quickActionsLeft">
-              {nocState < 3 ? (
-                <Button variant="secondary" size="sm" onClick={handleDraft} disabled={nocState < 2 || sending}>
+              {nocState === 'clarify' && (
+                <Button variant="primary" size="sm" onClick={handleAnalyze} disabled={messages.length === 0 || sending}>
+                  วิเคราะห์ต่อ {clarifyRounds >= 2 ? '(ครบ 2 รอบ)' : ''}
+                </Button>
+              )}
+              {(nocState === 'chat' || nocState === 'analyze') && (
+                <Button variant="secondary" size="sm" onClick={handleDraft} disabled={sending}>
                   ร่างคำตอบ
                 </Button>
-              ) : (
+              )}
+              {(nocState === 'draft' || nocState === 'escalate') && (
                 <>
                   <Button variant="secondary" size="sm" onClick={handleCopy}>
                     <Copy size={14} /> {copied ? 'คัดลอกแล้ว' : 'Copy'}
@@ -399,23 +534,40 @@ export default function NocPage() {
                   <Button variant="primary" size="sm" onClick={handleUseDraft}>
                     ใช้ร่างนี้
                   </Button>
+                  {nocState === 'draft' && (
+                    <>
+                      <Button variant="danger" size="sm" onClick={handleEscalate} disabled={sending}>Escalate</Button>
+                      <Button variant="secondary" size="sm" onClick={handleHandoff} disabled={sending}>Handoff</Button>
+                    </>
+                  )}
                 </>
               )}
             </div>
           </div>
 
           <div style={{ display: 'flex', gap: '6px', alignItems: 'flex-end', flexShrink: 0 }}>
-            <textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-              placeholder="พิมพ์ข้อความ..."
-              style={{
-                flex: 1, padding: '12px 14px', borderRadius: '10px', border: '1px solid var(--border-color)',
-                backgroundColor: 'var(--panel-bg)', color: 'var(--text-color)', resize: 'none',
-                minHeight: '70px', maxHeight: '100px', fontFamily: 'inherit', fontSize: '13px', lineHeight: 1.4,
-              }}
-            />
+            <Button variant="secondary" size="sm" onClick={() => fileInputRef.current?.click()} title="แนบไฟล์" style={{ padding: '12px 14px' }}>
+              <Paperclip size={16} />
+            </Button>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+              {attachedFile && (
+                <div className="fileAttachChip">
+                  <span className="fileAttachChipName">{attachedFile.name}</span>
+                  <span className="fileAttachChipRemove" onClick={() => setAttachedFile(null)}><X size={12} /></span>
+                </div>
+              )}
+              <textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
+                placeholder={nocState === 'clarify' ? 'วางข้อความลูกค้า หรือเลือก option แล้วส่ง...' : 'พิมพ์ข้อความ...'}
+                style={{
+                  flex: 1, padding: '12px 14px', borderRadius: '10px', border: '1px solid var(--border-color)',
+                  backgroundColor: 'var(--panel-bg)', color: 'var(--text-color)', resize: 'none',
+                  minHeight: '70px', maxHeight: '100px', fontFamily: 'inherit', fontSize: '13px', lineHeight: 1.4,
+                }}
+              />
+            </div>
             <Button variant="primary" onClick={handleSend} disabled={!input.trim() || sending}>
               <Send size={16} /> Send
             </Button>

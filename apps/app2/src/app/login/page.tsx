@@ -31,14 +31,7 @@ export default function LoginPage() {
         return;
       }
 
-      // Successful login
-      if (data.role === 'admin') {
-        router.push('/settings');
-      } else if (data.role === 'operation') {
-        router.push('/operation');
-      } else {
-        router.push('/noc');
-      }
+      router.push('/');
     } catch (err) {
       console.error(err);
       setError('An error occurred during login. Please try again.');
@@ -48,11 +41,31 @@ export default function LoginPage() {
 
   return (
     <div style={styles.container}>
-      <div style={styles.card}>
-        <div style={styles.header}>
-          <div style={styles.logo}>🤖</div>
-          <h1 style={styles.title}>chatbot-gate</h1>
-          <p style={styles.subtitle}>AI-powered NOC & Operation Support</p>
+      <div className="loginShellGrid" style={styles.grid}>
+        <div style={styles.heroCard}>
+          <div style={styles.brandRow}>
+            <div style={styles.mark}>G2</div>
+            <div>
+              <h1 style={styles.title}>GATE 2</h1>
+              <p style={styles.subtitle}>AI-powered NOC and Operation Support</p>
+            </div>
+          </div>
+          <div>
+            <div style={styles.eyebrow}>Operations Console</div>
+            <h2 style={styles.heroTitle}>ศูนย์กลางรับเคส วิเคราะห์ ส่งต่อ และดูแลระบบ</h2>
+            <p style={styles.heroText}>รวม NOC, Operation, case history, knowledge sync และ deploy controls ไว้ใน console เดียวตาม role ของผู้ใช้</p>
+          </div>
+          <div style={styles.statusStrip}>
+            <span style={styles.statusPill}>Groq primary</span>
+            <span style={styles.statusPill}>Ollama fallback</span>
+            <span style={styles.statusPill}>MCP ready</span>
+          </div>
+        </div>
+
+        <div style={styles.card}>
+          <div style={styles.header}>
+            <h2 style={styles.loginTitle}>เข้าสู่ระบบ</h2>
+            <p style={styles.subtitle}>เมนูและหน้าแรกจะแสดงตามสิทธิ์ผู้ใช้</p>
         </div>
 
         <form onSubmit={handleLogin} style={styles.form}>
@@ -90,6 +103,7 @@ export default function LoginPage() {
             {loading ? 'Logging in...' : 'Log In'}
           </button>
         </form>
+        </div>
       </div>
     </div>
   );
@@ -101,8 +115,25 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: '100vh',
-    background: 'radial-gradient(circle at top, #1e293b 0%, #0f172a 100%)',
+    background: 'radial-gradient(circle at 18% 10%, rgba(74,222,128,0.16), transparent 26%), radial-gradient(circle at 78% 4%, rgba(96,165,250,0.13), transparent 24%), linear-gradient(135deg, #060a09 0%, #0a1110 44%, #101819 100%)',
     padding: '20px',
+  },
+  grid: {
+    width: 'min(1120px, 100%)',
+    display: 'grid',
+    gridTemplateColumns: 'minmax(0, 1.1fr) 400px',
+    gap: '24px',
+  },
+  heroCard: {
+    minHeight: '520px',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    justifyContent: 'space-between',
+    background: 'linear-gradient(180deg, rgba(17,32,27,0.92), rgba(11,19,17,0.92))',
+    border: '1px solid rgba(160,199,177,0.14)',
+    borderRadius: '28px',
+    padding: '34px',
+    boxShadow: '0 24px 70px rgba(0,0,0,0.42)',
   },
   card: {
     width: '100%',
@@ -114,13 +145,11 @@ const styles = {
     padding: '40px 32px',
     boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3)',
   },
+  brandRow: { display: 'flex', alignItems: 'center', gap: '14px' },
+  mark: { width: '42px', height: '42px', borderRadius: '14px', display: 'grid', placeItems: 'center', background: 'linear-gradient(135deg, #4ade80, #0ea5e9)', color: '#06100d', fontWeight: 900, letterSpacing: '0.04em' },
   header: {
     textAlign: 'center' as const,
     marginBottom: '32px',
-  },
-  logo: {
-    fontSize: '48px',
-    marginBottom: '12px',
   },
   title: {
     fontSize: '24px',
@@ -129,6 +158,12 @@ const styles = {
     marginBottom: '4px',
     letterSpacing: '-0.025em',
   },
+  loginTitle: { fontSize: '26px', fontWeight: 800, color: '#f8fafc', marginBottom: '6px' },
+  eyebrow: { color: '#4ade80', fontSize: '12px', fontWeight: 800, letterSpacing: '0.18em', textTransform: 'uppercase' as const, marginBottom: '14px' },
+  heroTitle: { color: '#e8f3ee', fontSize: 'clamp(34px, 5vw, 58px)', lineHeight: 1.05, letterSpacing: '-0.06em', marginBottom: '18px' },
+  heroText: { color: '#8fa89d', fontSize: '16px', lineHeight: 1.75, maxWidth: '620px' },
+  statusStrip: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' },
+  statusPill: { border: '1px solid rgba(160,199,177,0.14)', borderRadius: '12px', padding: '10px', color: '#8fa89d', fontSize: '11px', background: 'rgba(255,255,255,0.025)' },
   subtitle: {
     fontSize: '13px',
     color: '#94a3b8',

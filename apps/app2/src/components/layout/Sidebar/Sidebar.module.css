@@ -1,7 +1,7 @@
 .sidebar {
-  width: 200px;
+  width: 220px;
   height: 100vh;
-  background-color: var(--panel-bg);
+  background-color: color-mix(in srgb, var(--panel-bg) 90%, transparent);
   border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
@@ -11,7 +11,7 @@
   z-index: 100;
 }
 .header { padding: 16px; border-bottom: 1px solid var(--border-color); }
-.logo { font-weight: 700; font-size: 18px; color: var(--accent-color); letter-spacing: 1px; }
+.logo { font-weight: 800; font-size: 18px; color: var(--accent-color); letter-spacing: 1px; }
 .nav { flex: 1; padding: 12px 8px; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; }
 .navItem { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 8px; color: var(--text-muted); font-size: 13px; font-weight: 500; transition: all 0.15s; }
 .navItem:hover { background-color: var(--bg-color); }
@@ -19,3 +19,34 @@
 .footer { padding: 12px 8px; border-top: 1px solid var(--border-color); }
 .themeToggle { display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 6px; color: var(--text-muted); font-size: 11px; cursor: pointer; opacity: 0.7; transition: all 0.15s; }
 .themeToggle:hover { background-color: var(--bg-color); opacity: 1; }
+
+@media (max-width: 820px) {
+  .sidebar {
+    position: sticky;
+    width: 100%;
+    height: auto;
+    top: 0;
+    z-index: 200;
+    border-right: 0;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .header {
+    padding: 12px;
+  }
+
+  .nav {
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 8px;
+  }
+
+  .navItem {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  .footer {
+    display: none;
+  }
+}

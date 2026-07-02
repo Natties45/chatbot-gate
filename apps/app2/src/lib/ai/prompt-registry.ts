@@ -28,7 +28,14 @@ export async function loadRolePrompt(role: AppPromptRole): Promise<string> {
 
 export async function loadActionPrompt(role: AppPromptRole, promptType: string): Promise<string> {
   if (role === 'operation') {
-    return readFirstExisting([promptType === 'close' ? 'prompts/op-close.md' : 'prompts/op-send.md']);
+    const operationPromptMap: Record<string, string> = {
+      close: 'prompts/op-close.md',
+      clarify: 'prompts/op-clarify.md',
+      research: 'prompts/op-research.md',
+      diagnose: 'prompts/op-diagnose.md',
+      message: 'prompts/op-send.md',
+    };
+    return readFirstExisting([operationPromptMap[promptType] || 'prompts/op-send.md']);
   }
 
   return readFirstExisting([`prompts/noc-${promptType}.md`]);

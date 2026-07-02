@@ -29,6 +29,13 @@ export const SETTING_DEFAULTS: Record<string, string> = {
   'knowledge.lastLog': '',
   'knowledge.indexStatus': 'not_built',
   'knowledge.indexLastBuiltAt': '',
+  'kb-auto.enabled': 'false',
+  'kb-auto.scheduleTime': '23:59',
+  'kb-auto.lastRunAt': '',
+  'kb-auto.running': 'false',
+  'kb-auto.lastResult': '',
+  'kb-auto.lastError': '',
+  'kb-auto.lastLog': '',
 };
 
 export async function getSetting(key: string): Promise<string> {

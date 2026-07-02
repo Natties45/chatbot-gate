@@ -2,7 +2,7 @@
 
 ## Context
 
-app2 is the v2.0.0 chatbot-gate app. It reuses the web1 NOC/Operation product flow but replaces opencode-as-bridge with an app-owned free-first LLM router, MCP gateway, prompt registry, case memory, and local fallback.
+app2 is the v2.0.1 chatbot-gate app. It reuses the web1 NOC/Operation product flow but replaces opencode-as-bridge with an app-owned free-first LLM router, MCP gateway, prompt registry, case memory, and local fallback.
 
 ## Layout
 

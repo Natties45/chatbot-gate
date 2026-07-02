@@ -3,7 +3,9 @@ import { routeLlm } from './llm-router';
 import { LlmMessage, LlmResponse } from './types';
 import { kbSearch } from '@/lib/mcp/kb-mcp-client';
 import { caseSimilar } from '@/lib/mcp/case-history-mcp-client';
+import { callMcpTool } from '@/lib/mcp/mcp-gateway';
 import { UserRole, AppPage } from '@/lib/mcp/tool-policy';
+import { opencodeResearch } from './opencode-client';
 
 interface BrainUser {
   id: string;
@@ -89,6 +91,25 @@ async function searchSimilarCases(
   }
 }
 
+async function inspectDockerReadOnly(userText: string, role: UserRole, page: AppPage, caseId: string): Promise<string> {
+  if (page !== 'Operation' || (role !== 'admin' && role !== 'operation')) return '';
+
+  const looksInfrastructureRelated = /container|docker|compose|nginx|app2|memory|cpu|log|502|timeout|service/i.test(userText);
+  if (!looksInfrastructureRelated) return '';
+
+  const results = await Promise.all([
+    callMcpTool({ serverName: 'docker-mcp', toolName: 'compose_ps', input: {}, role, page, caseId }),
+    callMcpTool({ serverName: 'docker-mcp', toolName: 'container_stats', input: { container: 'app2' }, role, page, caseId }),
+  ]);
+
+  return results
+    .map((result, index) => {
+      const name = index === 0 ? 'compose_ps' : 'container_stats app2';
+      return result.success ? `${name}:\n${result.output}` : `${name}: unavailable (${result.error})`;
+    })
+    .join('\n\n');
+}
+
 export async function runChatAction(params: RunActionParams): Promise<LlmResponse> {
   const rolePrompt = await loadRolePrompt(params.role);
   const actionPrompt = await loadActionPrompt(params.role, params.promptType);
@@ -103,6 +124,17 @@ export async function runChatAction(params: RunActionParams): Promise<LlmRespons
     searchKnowledgeBase(userText, userRole, page, params.dbCaseId),
     searchSimilarCases(userText, userRole, page, params.dbCaseId),
   ]);
+
+  let opencodeResults = '';
+  let dockerResults = '';
+  if (params.role === 'operation' && (params.promptType === 'research' || params.promptType === 'diagnose')) {
+    const [ocResult, dockerResult] = await Promise.all([
+      opencodeResearch(userText),
+      inspectDockerReadOnly(userText, userRole, page, params.dbCaseId),
+    ]);
+    opencodeResults = ocResult.success ? ocResult.output : `OpenCode unavailable: ${ocResult.error}`;
+    dockerResults = dockerResult;
+  }
 
   const vars = {
     MESSAGE: params.message || '',
@@ -123,6 +155,8 @@ export async function runChatAction(params: RunActionParams): Promise<LlmRespons
       recentHistory ? `Recent conversation:\n${recentHistory}` : '',
       kbResults ? `Knowledge Base Results:\n${kbResults}` : '',
       caseResults ? `Similar Cases:\n${caseResults}` : '',
+      opencodeResults ? `OpenCode Research Results:\n${opencodeResults}` : '',
+      dockerResults ? `Docker Read-only Inspection:\n${dockerResults}` : '',
       actionPrompt,
     ]
       .filter(Boolean)

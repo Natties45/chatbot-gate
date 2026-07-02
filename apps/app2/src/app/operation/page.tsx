@@ -7,6 +7,7 @@ import { Plus, Send, FileText, AlertTriangle, RefreshCw } from 'lucide-react';
 import { apiUrl } from '@/lib/api';
 
 type PageState = 'idle' | 'loading' | 'chat' | 'offline';
+type OperationPhase = 'clarify' | 'research' | 'diagnose';
 
 interface ChatMsg {
   id: string;
@@ -33,27 +34,26 @@ interface UserProfile {
   role: string;
 }
 
-interface OpChatResponse {
-  response: string;
-  sessionId?: string;
-  dbCaseId?: string;
-  caseId?: string;
-  error?: string;
-}
-
 interface OpMessageItem {
   id: string;
   role: string;
   content: string;
 }
 
+interface ResearchProgress {
+  step: number;
+  total: number;
+  label: string;
+  status: string;
+}
+
 function OperationContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [user, setUser] = useState<UserProfile | null>(null);
   const [state, setState] = useState<PageState>('loading');
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const [dbCaseId, setDbCaseId] = useState<string | null>(null);
+  const [phase, setPhase] = useState<OperationPhase>('clarify');
+  const [progress, setProgress] = useState<ResearchProgress>({ step: 0, total: 3, label: 'Idle', status: 'idle' });
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [input, setInput] = useState('');
   const [error, setError] = useState('');
@@ -86,7 +86,6 @@ function OperationContent() {
       
       const data = await res.json();
       setSessionId(data.sessionId);
-      setDbCaseId(data.id);
       
       const mappedMessages: ChatMsg[] = (data.messages || []).map((m: OpMessageItem) => ({
         id: m.id,
@@ -95,6 +94,7 @@ function OperationContent() {
       }));
 
       setMessages(mappedMessages);
+      setPhase(mappedMessages.length > 1 ? 'diagnose' : 'clarify');
       setState('chat');
     } catch {
       setError('Cannot connect to server');
@@ -134,8 +134,6 @@ function OperationContent() {
           router.push('/login');
           return;
         }
-        setUser(profile);
-        
         // Load active history
         await loadHistory();
         setState('idle');
@@ -164,6 +162,8 @@ function OperationContent() {
     setState('loading');
     setMessages([]);
     setAttachedFile(null);
+    setPhase('clarify');
+    setProgress({ step: 0, total: 3, label: 'Idle', status: 'idle' });
     setError('');
     
     try {
@@ -179,7 +179,6 @@ function OperationContent() {
         return;
       }
       setSessionId(data.sessionId);
-      setDbCaseId(data.dbCaseId);
       setState('chat');
     } catch {
       setError('Cannot connect to server');
@@ -202,7 +201,12 @@ function OperationContent() {
     setSending(true);
 
     try {
-      const body: Record<string, unknown> = { action: 'message', message: finalMsg, sessionId };
+      const body: Record<string, unknown> = {
+        action: 'message',
+        message: finalMsg,
+        sessionId,
+        promptType: phase === 'clarify' ? 'clarify' : 'message',
+      };
       if (messages.length > 0) {
         body.history = messages.map((m) => ({ role: m.role, content: m.content }));
       }
@@ -259,6 +263,62 @@ function OperationContent() {
     }
   }
 
+  async function pollProgress(activeSessionId: string) {
+    try {
+      const res = await fetch(apiUrl(`/api/chat/operation/progress?sessionId=${activeSessionId}`));
+      if (res.ok) {
+        const data = await res.json();
+        setProgress(data);
+      }
+    } catch {
+      // Progress polling is best-effort and must not break the chat flow.
+    }
+  }
+
+  async function runOperationPrompt(promptType: 'research' | 'diagnose', message: string) {
+    if (!sessionId || sending) return;
+
+    setSending(true);
+    if (promptType === 'research') {
+      setPhase('research');
+      setProgress({ step: 1, total: 3, label: 'กำลังเริ่ม research...', status: 'running' });
+    }
+
+    const poller = promptType === 'research'
+      ? window.setInterval(() => pollProgress(sessionId), 1000)
+      : null;
+
+    try {
+      const res = await fetch(apiUrl('/api/chat/operation'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'message',
+          promptType,
+          message,
+          sessionId,
+          history: messages.map((m) => ({ role: m.role, content: m.content })),
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Operation request failed');
+
+      setMessages((prev) => [...prev, { role: 'assistant', content: data.response, id: Date.now().toString() }]);
+      setPhase('diagnose');
+      if (promptType === 'research') {
+        setProgress({ step: 3, total: 3, label: 'Research complete', status: 'done' });
+      }
+    } catch (err: unknown) {
+      const messageText = err instanceof Error ? err.message : 'Operation request failed';
+      setMessages((p) => [...p, { role: 'assistant', content: `Error: ${messageText}`, id: Date.now().toString() }]);
+      setProgress({ step: progress.step, total: 3, label: messageText, status: 'error' });
+    } finally {
+      if (poller) window.clearInterval(poller);
+      setSending(false);
+    }
+  }
+
   async function closeCase() {
     if (!sessionId) return;
     if (!confirm('ต้องการปิดเคสนี้?')) return;
@@ -272,9 +332,9 @@ function OperationContent() {
       });
       
       setSessionId(null);
-      setDbCaseId(null);
       setMessages([]);
       setAttachedFile(null);
+      setPhase('clarify');
       setState('idle');
       loadHistory();
     } catch {
@@ -302,9 +362,9 @@ function OperationContent() {
     if (state === 'chat' && sessionId) {
       if (confirm('กลับหน้าหลัก? เคสปัจจุบันจะยังอยู่ในประวัติ')) {
         setSessionId(null);
-        setDbCaseId(null);
         setMessages([]);
         setAttachedFile(null);
+        setPhase('clarify');
         setState('idle');
         loadHistory();
       }
@@ -388,9 +448,25 @@ function OperationContent() {
             )}
             {messages.map((m) => (
               <div key={m.id} className={`messageBubble ${m.role === 'user' ? 'userBubble' : 'assistantBubble'}`}>
-                {m.content}
+                <span>{m.content}</span>
+                {m.role === 'assistant' && phase === 'clarify' && extractOptions(m.content).length > 0 && (
+                  <div className="optionGrid">
+                    {extractOptions(m.content).map((option) => (
+                      <button key={option} type="button" className="optionButton" onClick={() => setInput(option)}>
+                        {option}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
+            {phase === 'research' && (
+              <div className="researchProgressCard">
+                <div className="researchProgressTop"><strong>Research Progress</strong><span>{progress.step}/{progress.total}</span></div>
+                <div className="researchProgressBar"><div className="researchProgressFill" style={{ width: `${Math.max(10, (progress.step / progress.total) * 100)}%` }} /></div>
+                <p>{progress.label}</p>
+              </div>
+            )}
             {sending && (
               <div className="messageBubble assistantBubble" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span className="spinner" />
@@ -402,6 +478,16 @@ function OperationContent() {
 
           <div className="quickActionBar">
             <div className="quickActionsLeft">
+              {phase === 'clarify' && (
+                <Button variant="primary" size="sm" onClick={() => runOperationPrompt('research', 'Start sequential research using the current Operation case context.')} disabled={messages.length === 0 || sending}>
+                  เริ่ม Research
+                </Button>
+              )}
+              {phase === 'diagnose' && (
+                <Button variant="primary" size="sm" onClick={() => runOperationPrompt('diagnose', 'Create structured diagnosis from this Operation case context.')} disabled={sending}>
+                  สรุป Diagnosis
+                </Button>
+              )}
               <Button variant="secondary" size="sm" onClick={handleDraft} disabled={sending}>
                 ร่างคำตอบ
               </Button>
@@ -439,6 +525,16 @@ function OperationContent() {
       )}
     </AppLayout>
   );
+}
+
+function extractOptions(content: string): string[] {
+  const options: string[] = [];
+  const optionRegex = /^\[(\d+)\]\s+(.+)$/gm;
+  let match: RegExpExecArray | null;
+  while ((match = optionRegex.exec(content)) !== null) {
+    options.push(`[${match[1]}] ${match[2]}`);
+  }
+  return options;
 }
 
 export default function OperationPage() {

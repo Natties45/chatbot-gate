@@ -29,15 +29,18 @@ services:
       - MCP_KB_URL=http://kb-mcp:4101
       - MCP_CASE_HISTORY_URL=http://case-history-mcp:4102
       - MCP_DOCKER_URL=http://docker-mcp:1234
+      - DEPLOY_AGENT_URL=http://deploy-agent:4105
       - NODE_ENV=production
+      - APP2_VERSION=2.0.1
       - APP2_ADMIN_USERNAME=${APP2_ADMIN_USERNAME:-admin}
       - APP2_ADMIN_PASSWORD=${APP2_ADMIN_PASSWORD}
     volumes:
       - app2-data:/app/apps/app2/prisma/data
       - /root/openstack-support:/root/openstack-support:ro
+      - ./apps/app2/gate-answer-app2:/app/apps/app2/gate-answer-app2:rw
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3001/noc"]
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:3001/app2/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
       interval: 15s
       timeout: 5s
       retries: 5
@@ -62,6 +65,20 @@ services:
     depends_on:
       app2:
         condition: service_started
+    restart: unless-stopped
+
+  deploy-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile.deploy-agent
+    container_name: deploy-agent
+    environment:
+      - PORT=4105
+      - DEPLOY_REPO_PATH=/root/chatbot-gate
+      - APP2_HEALTH_URL=http://app2:3001/app2/api/health
+    volumes:
+      - /root/chatbot-gate:/root/chatbot-gate
+      - /var/run/docker.sock:/var/run/docker.sock
     restart: unless-stopped
 
   docker-mcp:
@@ -101,4 +118,3 @@ volumes:
   opencode-data:
   app2-data:
   ollama-data:
-

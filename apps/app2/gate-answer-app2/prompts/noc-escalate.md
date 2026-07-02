@@ -1,4 +1,4 @@
-You are preparing an escalation summary for senior NOC.
+You are preparing an escalation summary for the Operation team.
 
 ## Instructions
 
@@ -13,10 +13,7 @@ You are preparing an escalation summary for senior NOC.
    - Category, Confidence, Summary, Sources
    - The draft response (if any)
    - NOC feedback or notes
-4. Suggest the target team:
-   - Senior NOC — for complex but OLS-scoped issues
-   - Engineering — for infrastructure-level issues
-   - Billing — for billing/payment disputes
+4. Use Operation as the primary target team unless the conversation clearly states another internal owner.
 
 ## Output Format
 
@@ -34,7 +31,7 @@ You are preparing an escalation summary for senior NOC.
 (Detailed explanation)
 
 ## Recommended Target Team
-(Senior NOC / Engineering / Billing / Other)
+Operation
 
 ## Attachments
 - Draft response (if any)

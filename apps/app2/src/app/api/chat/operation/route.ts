@@ -4,6 +4,7 @@ import { requireAuth } from '@/lib/auth';
 import { createCase, addMessage, getCaseBySessionId, closeCase } from '@/lib/case-db';
 import { runChatAction } from '@/lib/ai/ai-brain';
 import { isLlmProviderError } from '@/lib/ai/types';
+import { setOperationProgress } from '@/lib/operation-progress';
 
 interface ChatHistoryItem {
   role: string;
@@ -14,8 +15,11 @@ interface OperationRequestBody {
   action?: string;
   message?: string;
   sessionId?: string;
+  promptType?: string;
   history?: ChatHistoryItem[];
 }
+
+const ALLOWED_PROMPT_TYPES = new Set(['message', 'clarify', 'research', 'diagnose', 'close']);
 
 function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'Internal error';
@@ -75,22 +79,41 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({ error: 'Active case not found for session' }, { status: 404 });
         }
 
+        const promptType = body.promptType || 'message';
+        if (!ALLOWED_PROMPT_TYPES.has(promptType)) {
+          return NextResponse.json({ error: `invalid promptType: ${promptType}` }, { status: 400 });
+        }
+
+        if (promptType === 'research') {
+          setOperationProgress(sessionId, { step: 1, total: 3, label: 'กำลังค้นหา Knowledge Base...', status: 'running' });
+        } else if (promptType === 'diagnose') {
+          setOperationProgress(sessionId, { step: 3, total: 3, label: 'กำลังสรุป diagnosis...', status: 'running' });
+        }
+
         await addMessage({
           caseId: dbCase.id,
           role: 'user',
           content: message || '',
         });
 
+        if (promptType === 'research') {
+          setOperationProgress(sessionId, { step: 2, total: 3, label: 'กำลังถาม OpenCode และตรวจ Docker แบบ read-only...', status: 'running' });
+        }
+
         const response = await runChatAction({
           role: 'operation',
           dbCaseId: dbCase.id,
           caseId: dbCase.caseId,
           sessionId,
-          promptType: 'message',
+          promptType,
           message,
           history: body.history,
           user,
         });
+
+        if (promptType === 'research' || promptType === 'diagnose') {
+          setOperationProgress(sessionId, { step: 3, total: 3, label: 'เสร็จสิ้นการประมวลผล', status: 'done' });
+        }
 
         await addMessage({
           caseId: dbCase.id,

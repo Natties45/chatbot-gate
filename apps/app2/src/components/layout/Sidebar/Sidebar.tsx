@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTheme } from 'next-themes';
-import { Shield, Settings, History, Lock } from 'lucide-react';
+import { LayoutDashboard, Shield, Settings, History, Lock } from 'lucide-react';
 import { apiUrl } from '@/lib/api';
 import styles from './Sidebar.module.css';
 import { useEffect, useState } from 'react';
@@ -35,6 +35,9 @@ export function Sidebar({ onActiveClick }: SidebarProps) {
 
   const menuItems = [];
 
+  if (role) {
+    menuItems.push({ name: 'Dashboard', path: '/', icon: LayoutDashboard });
+  }
   if (role === 'admin' || role === 'noc') {
     menuItems.push({ name: 'NOC Chat', path: '/noc', icon: Shield });
   }
@@ -69,7 +72,7 @@ export function Sidebar({ onActiveClick }: SidebarProps) {
             <Link
               key={item.path}
               href={item.path}
-              className={`${styles.navItem} ${isActive ? styles.active : ''}`}
+            className={`${styles.navItem} ${isActive || (item.path === '/' && pathname === '') ? styles.active : ''}`}
               onClick={(e) => handleClick(e, item.path, isActive)}
             >
               <Icon size={14} />

@@ -3,7 +3,6 @@ import {
   isToolAllowed,
   getTimeoutMs,
   getMaxOutputChars,
-  ToolPolicy,
   UserRole,
   AppPage,
   TOOL_POLICIES,
@@ -24,11 +23,6 @@ export interface McpToolResult {
   output?: string;
   error?: string;
   latencyMs: number;
-}
-
-interface McpServerConfig {
-  url: string;
-  timeoutMs?: number;
 }
 
 const MCP_SERVER_URLS: Record<string, string> = {

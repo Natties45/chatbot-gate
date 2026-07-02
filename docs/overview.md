@@ -1,7 +1,7 @@
 # chatbot-gate — Overview
 
-> Current version: **1.10.0** — deployed locally for testing.
-> Last updated: 2026-06-30
+> Current version: **2.0.0** — deployed to production (203.154.16.162).
+> Last updated: 2026-07-02
 
 ## What is it?
 
@@ -13,18 +13,18 @@ AI-powered NOC and Operation support tool. A thin web UI wrapper around the [ope
 |-------|-----------|
 | Frontend | Next.js 15.5 (App Router), React 19, TypeScript 5 |
 | Styling | Tailwind CSS v4, lucide-react |
-| AI Bridge | opencode v1.17+ (local binary, MIT) |
-| LLM | opencode.ai/zen free models (big-pickle default) |
+| AI Bridge | Groq Free API (`qwen/qwen3-32b`) / Ollama (`qwen3:4b`) fallback |
 | Database | SQLite via Prisma ORM |
 | Proxy | nginx:stable |
-| Container | Docker Compose (4 services) |
-| Server | Ubuntu 24.04 AMD64 — 203.154.16.197 |
+| Container | Docker Compose (8 services) |
+| Server | Ubuntu 26.04 AMD64 — 203.154.16.162 |
 
 ## Apps
 
 | App | Status | Description |
 |-----|--------|-------------|
-| `apps/web1/` | **Active** (v1.10.0) | Auth-driven NOC/Operation chat, History, Git Sync |
+| `apps/app2/` | **Active** (v2.0.0) | AI NOC/Operation chat, Groq API, MCP Tools, History, Git Sync |
+| `apps/web1/` | Legacy (v1.10.0) | Old opencode-driven UI |
 | `apps/web/` | Deleted | Old auth-driven UI (deprecated, removed) |
 
 ## Project Agents

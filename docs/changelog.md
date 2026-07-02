@@ -5,6 +5,29 @@
 
 ---
 
+## 2026-07-02 — Version 2.0.0 (Production Deployment & AI Polish)
+
+### Architecture
+- Created `apps/app2` based on `web1` but replacing `.opencode` as the bridge.
+- **Multitenancy**: nginx routes `/app2` to port 3001 (`app2`) and `/` to port 3000 (`web1`).
+- Implemented **Groq Free** API (`qwen/qwen3-32b`) as primary LLM.
+- Preloaded **Ollama** (`qwen3:4b`) container on the server as local fallback.
+- Added **8 containers** stack: `opencode`, `web1`, `app2`, `ollama`, `nginx`, `docker-mcp`, `kb-mcp`, `case-history-mcp`.
+
+### Key Features
+| Feature | Details |
+|---------|---------|
+| Free-first LLM Router | `ai-brain.ts` handles Groq integration and local fallback routing. |
+| MCP Gateway | Replaced legacy tool execution with standard MCP tools for KB and Case History. |
+| AI Reasoning Filter | Strips out `<think>` tags from LLM responses before rendering to the frontend for a more human-like response. |
+
+### Files Created/Modified
+| File | Action |
+|------|--------|
+| `apps/app2/` | Created Next.js app based on v1.10.0 codebase. |
+| `apps/app2/src/lib/ai/ai-brain.ts` | Created LLM router, prompt interpolation, fallback, and `<think>` block filtering. |
+| `docker-compose.yml`, `nginx.conf` | Updated for 8-container stack with `/app2` subpath routing. |
+
 ## 2026-06-30 — Version 1.10.0 (Database, RBAC, Settings & Git Sync)
 
 ### Architecture

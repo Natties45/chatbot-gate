@@ -1,6 +1,6 @@
 # Version 2.0.0 — app2 Free-First LLM + MCP Chatbot
 
-> **Status:** Planned
+> **Status:** Deployed
 > **Date:** 2026-07-01
 > **Scope:** New `apps/app2` based on the web1 concept, replacing opencode-as-bridge with a free-first LLM router, MCP tool gateway, and local fallback.
 

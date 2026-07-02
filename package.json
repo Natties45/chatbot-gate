@@ -1,19 +1,16 @@
 {
   "name": "chatbot-gate-monorepo",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
   "workspaces": [
-    "apps/*",
-    "packages/*"
+    "apps/*"
   ],
   "scripts": {
-    "dev": "npm run dev --workspace=apps/web1",
+    "dev": "npm run dev --workspace=apps/app2",
     "dev:docker": "docker compose -f docker-compose.dev.yml up -d",
-    "build": "npm run build --workspace=apps/web1",
-    "start": "npm run start --workspace=apps/web1",
-    "lint": "npm run lint --workspace=apps/web1",
-    "test": "npx playwright test --config=tests/playwright.config.ts",
-    "test:docker": "docker compose -f docker-compose.dev.yml run playwright-mcp npx playwright test --config=tests/playwright.config.ts",
-    "clean": "rm -rf apps/web1/.next node_modules"
+    "build": "npm run build --workspace=apps/app2",
+    "start": "npm run start --workspace=apps/app2",
+    "lint": "npm run lint --workspace=apps/app2",
+    "clean": "rm -rf apps/app2/.next node_modules"
   }
 }

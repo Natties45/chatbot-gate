@@ -16,14 +16,5 @@ RUN mkdir -p /root/.config/opencode && \
     echo '{"dependencies":{"@opencode-ai/plugin":"1.17.9","@ai-sdk/openai-compatible":"latest"}}' > /root/.config/opencode/package.json && \
     npm install --prefix /root/.config/opencode
 
-COPY apps/web1/opencode.json apps/web1/opencode.json
-COPY apps/web1/gate-answer/ apps/web1/gate-answer/
-COPY apps/web1/bridge.js apps/web1/bridge.js
-
-RUN sed -i 's|http://localhost:8931|http://playwright-mcp:8931|g' apps/web1/opencode.json && \
-    sed -i 's|http://localhost:1234|http://docker-mcp:1234|g' apps/web1/opencode.json
-
-WORKDIR /chatbot-gate/apps/web1
-
 EXPOSE 4096
-CMD ["node", "bridge.js"]
+CMD ["opencode", "serve", "--hostname", "0.0.0.0", "--port", "4096"]

@@ -1,11 +1,12 @@
 # chatbot-gate — Overview
 
 > Current version: **2.0.0** — deployed to production (203.154.16.162).
+> Next: **2.1.0 → 2.4.0** (planned).
 > Last updated: 2026-07-02
 
 ## What is it?
 
-AI-powered NOC and Operation support tool. A thin web UI wrapper around the [opencode](https://opencode.ai) local HTTP API. Designed for **OpenLandscape Cloud (OLS)** NOC agents and operations engineers.
+AI-powered NOC and Operation support tool. Uses Groq Free API + Ollama local fallback with MCP tools for knowledge retrieval and diagnostics. Designed for **OpenLandscape Cloud (OLS)** NOC agents and operations engineers.
 
 ## Stack
 
@@ -23,9 +24,18 @@ AI-powered NOC and Operation support tool. A thin web UI wrapper around the [ope
 
 | App | Status | Description |
 |-----|--------|-------------|
-| `apps/app2/` | **Active** (v2.0.0) | AI NOC/Operation chat, Groq API, MCP Tools, History, Git Sync |
+| `apps/app2/` | **Active** (v2.0.0) | AI NOC/Operation chat, Groq API, MCP Tools, History, Git Sync, Settings |
 | `apps/web1/` | Legacy (v1.10.0) | Old opencode-driven UI |
-| `apps/web/` | Deleted | Old auth-driven UI (deprecated, removed) |
+
+## Version Roadmap
+
+| Version | Status | Summary |
+|---------|--------|---------|
+| 2.0.0 | Deployed | Free-first LLM router, MCP gateway, SQLite cases, 8-container stack |
+| 2.1.0 | Planned | NOC Intelligence: clarify phase, escalate, handoff, file attach |
+| 2.2.0 | Planned | Operation Intelligence: OpenCode research, multi-source, clarify |
+| 2.3.0 | Planned | Auto KB Generation: daily YAML summaries, git push auto-generated/ |
+| 2.4.0 | Planned | CI/CD: deploy-agent sidecar, one-click deploy, rollback, prompt volume |
 
 ## Project Agents
 

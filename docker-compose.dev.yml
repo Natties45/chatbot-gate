@@ -1,23 +1,4 @@
 services:
-  web1:
-    build:
-      context: .
-      dockerfile: apps/web1/Dockerfile
-      target: dev
-    ports:
-      - "4568:4568"
-    environment:
-      - OPENCODE_SERVER_URL=http://host.docker.internal:4096
-      - DATABASE_URL=file:/app/apps/web1/data/app.db
-      - NODE_ENV=development
-    volumes:
-      - ./apps/web1:/app/apps/web1
-      - ./apps/web1/gate-answer:/app/apps/web1/gate-answer
-      - /app/apps/web1/node_modules
-      - /app/apps/web1/.next
-    command: npx next dev --port 4568 -p 4568
-    restart: unless-stopped
-
   docker-mcp:
     build:
       context: .

@@ -12,28 +12,6 @@ services:
       - /root/openstack-support:/root/openstack-support:ro
     restart: unless-stopped
 
-  web1:
-    build:
-      context: .
-      dockerfile: apps/web1/Dockerfile
-      target: prod
-    environment:
-      - OPENCODE_SERVER_URL=http://opencode:4096
-      - DATABASE_URL=file:/app/apps/web1/data/app.db
-      - NODE_ENV=production
-    depends_on:
-      - opencode
-    volumes:
-      - web1-data:/app/apps/web1/data
-      - /root/openstack-support:/root/openstack-support:rw
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3000"]
-      interval: 15s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-
   app2:
     build:
       context: .
@@ -82,8 +60,8 @@ services:
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
-      web1:
-        condition: service_healthy
+      app2:
+        condition: service_started
     restart: unless-stopped
 
   docker-mcp:
@@ -121,7 +99,6 @@ services:
 
 volumes:
   opencode-data:
-  web1-data:
   app2-data:
   ollama-data:
 

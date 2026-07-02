@@ -5,6 +5,39 @@
 
 ---
 
+## 2026-07-02 — Versions 2.1.0 - 2.4.0 (Planning Phase)
+
+### Roadmap Defined
+
+Completed planning and documentation for 4 upcoming versions covering NOC intelligence,
+Operation intelligence, auto KB generation, and CI/CD deployment.
+
+| Version | Scope | Doc |
+|---------|-------|-----|
+| 2.1.0 | NOC Clarify + Escalate + Handoff + File Attach | `docs/versions/2.1.0/plan.md` |
+| 2.2.0 | Operation Clarify + OpenCode Research + Multi-Source | `docs/versions/2.2.0/plan.md` |
+| 2.3.0 | Auto KB Generation + Git Push (auto-generated/) | `docs/versions/2.3.0/plan.md` |
+| 2.4.0 | CI/CD Deploy Agent + Prompt Volume Mount | `docs/versions/2.4.0/plan.md` |
+
+### Key Decisions (Decision Log)
+
+| # | Topic | Decision |
+|---|-------|----------|
+| 1 | NOC clarify approach | Ask directly + options, max 2 rounds, AI decides escalate threshold |
+| 2 | NOC escalate target | Operation team only — AI generates internal summary |
+| 3 | NOC file attach | txt + images, `/tmp/uploads/`, daily cleanup |
+| 4 | OpenCode integration | HTTP API `opencode:4096`, full access (trust sandbox) |
+| 5 | Operation research | Sequential: KB → OpenCode → Docker (not parallel) |
+| 6 | Auto KB format | YAML output to `auto-generated/YYYY-MM-DD/` |
+| 7 | Auto KB push | Only `auto-generated/` folder — never push code |
+| 8 | KB scheduler | `setInterval` every 60s, DB lock prevents duplicate runs |
+| 9 | Deploy trigger | Admin enters tag → Deploy button + nightly tag sync |
+| 10 | Deploy rollback | Health check 15s → fail → `docker compose up -d app2` |
+| 11 | Prompt editing | Mount volume → edit on server → `restart` (no rebuild) |
+| 12 | Settings layout | 5 tabs: Agents > Git > KB Auto > Deploy > Users |
+
+
+
 ## 2026-07-02 — Version 2.0.0 (Production Deployment & AI Polish)
 
 ### Architecture

@@ -44,6 +44,7 @@ export async function chatWithOllama(params: OllamaChatRequest): Promise<LlmResp
         options: {
           temperature: params.temperature ?? 0.2,
           num_predict: params.maxTokens ?? 1024,
+          num_ctx: 4096,
         },
       }),
       signal: AbortSignal.timeout(params.timeoutMs),

@@ -22,8 +22,26 @@ async function readFirstExisting(relativePaths: string[]): Promise<string> {
   throw new Error(`Prompt file not found: ${relativePaths.join(', ')}`);
 }
 
+async function readAllExisting(relativePaths: string[]): Promise<string[]> {
+  const contents: string[] = [];
+  for (const relativePath of relativePaths) {
+    try {
+      const content = await fs.readFile(path.join(PROMPT_ROOT, relativePath), 'utf-8');
+      contents.push(content);
+    } catch (error) {
+      const code = error instanceof Error && 'code' in error ? String((error as NodeJS.ErrnoException).code) : '';
+      if (code !== 'ENOENT') throw error;
+    }
+  }
+  if (contents.length === 0) {
+    throw new Error(`Prompt file not found: ${relativePaths.join(', ')}`);
+  }
+  return contents;
+}
+
 export async function loadRolePrompt(role: AppPromptRole): Promise<string> {
-  return readFirstExisting(ROLE_FILE_CANDIDATES[role]);
+  const contents = await readAllExisting(ROLE_FILE_CANDIDATES[role]);
+  return contents.join('\n\n');
 }
 
 export async function loadActionPrompt(role: AppPromptRole, promptType: string): Promise<string> {

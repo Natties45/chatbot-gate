@@ -50,7 +50,7 @@ function getUserText(params: RunActionParams): string {
 }
 
 function compactForFallback(text: string): string {
-  const maxChars = 8_000;
+  const maxChars = 16_000;
   if (text.length <= maxChars) return text;
   return `${text.slice(0, maxChars)}\n\n[Prompt truncated for local fallback]`;
 }

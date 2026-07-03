@@ -111,6 +111,9 @@ const testCases = [
             return { error: err.message };
           }
         }, test, suite);
+        
+        // Delay 25 seconds to prevent Groq Rate Limits
+        await new Promise(resolve => setTimeout(resolve, 25000));
 
         resultsMd += `### ${test.name}\n`;
         resultsMd += `**Query:** \`${test.query}\`\n\n`;

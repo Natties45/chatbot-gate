@@ -29,6 +29,33 @@ async function main() {
     },
   });
   console.log(`Seeded user: ${admin.username} (role: ${admin.role})`);
+
+  // Seed test users for intelligence verification
+  const nocPasswordHash = await bcrypt.hash('NocPassword123!', 10);
+  const nocUser = await prisma.user.upsert({
+    where: { username: 'noc_user' },
+    update: { passwordHash: nocPasswordHash },
+    create: {
+      username: 'noc_user',
+      passwordHash: nocPasswordHash,
+      role: 'noc',
+      status: 'active',
+    },
+  });
+  console.log(`Seeded user: ${nocUser.username} (role: ${nocUser.role})`);
+
+  const opPasswordHash = await bcrypt.hash('OpPassword123!', 10);
+  const opUser = await prisma.user.upsert({
+    where: { username: 'op_user' },
+    update: { passwordHash: opPasswordHash },
+    create: {
+      username: 'op_user',
+      passwordHash: opPasswordHash,
+      role: 'operation',
+      status: 'active',
+    },
+  });
+  console.log(`Seeded user: ${opUser.username} (role: ${opUser.role})`);
 }
 
 main()

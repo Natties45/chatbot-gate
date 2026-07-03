@@ -5,6 +5,49 @@
 
 ---
 
+## 2026-07-02 — Version 2.5.0 (Intelligence Fix + Ollama OOM Fix)
+
+### Option A — Prompt Boundary Enforcement
+**Root cause:** `prompt-registry.ts` used `readFirstExisting` — loaded only `roles/*.md` (thin, 12 lines) while skipping `agents/*.md` (comprehensive agent definitions with boundary controls). Boundary rules added in previous commits were dead code.
+
+**Fixes (9 files):**
+- `prompt-registry.ts`: Changed `loadRolePrompt` from first-match to concat-all. System prompt now includes `roles/` + `agents/` + action prompt.
+- `agents/noc-agent.md`: Removed file-read instructions, added "UNDER NO CIRCUMSTANCES" + rejection patterns, strengthened Clarify/Confirm with Thai examples.
+- `agents/operation-agent.md`: Same — removed file-read, added ❌/✅ rejection examples, added exception to Output Format.
+- 6 action prompts: Added `## Priority: Out-of-Scope Check (DO THIS FIRST)` with explicit rejection blocks before output format instructions.
+
+### Option B — Ollama OOM Fix
+**Root cause:** `qwen3:4b` (~2.5GB) + default 32K context KV cache (~1.5GB) + overhead (~0.5GB) = ~4.5GB peak, exceeding 4G Docker memory limit → OOM killer.
+
+**Fixes (3 files):**
+- `providers/ollama.ts`: Added `num_ctx: 4096` — KV cache reduced from ~1.5GB → ~0.25GB
+- `ai-brain.ts`: `compactForFallback` maxChars 8000 → 4000
+- `docker-compose.yml`: Added `OLLAMA_NUM_PARALLEL=1`, `OLLAMA_KEEP_ALIVE=5m`, `OLLAMA_MAX_LOADED_MODELS=1`
+
+### Option C — Deploy System (Analyzed)
+- Deploy API 500: `deploy-agent` container not running — infra fix, not code
+- Git Sync: KB volume missing `.git` — by design for KB repo, not app deploy
+
+### Files Changed
+| File | Action |
+|------|--------|
+| `src/lib/ai/prompt-registry.ts` | `loadRolePrompt` — concat roles + agents |
+| `src/lib/ai/providers/ollama.ts` | `num_ctx: 4096` |
+| `src/lib/ai/ai-brain.ts` | `compactForFallback` 8000 → 4000 chars |
+| `gate-answer-app2/agents/noc-agent.md` | Boundary controls + reject patterns |
+| `gate-answer-app2/agents/operation-agent.md` | Boundary controls + reject patterns |
+| `gate-answer-app2/prompts/noc-analyze.md` | Priority out-of-scope check |
+| `gate-answer-app2/prompts/op-send.md` | Priority out-of-scope check |
+| `gate-answer-app2/prompts/op-diagnose.md` | Priority out-of-scope check |
+| `gate-answer-app2/prompts/noc-chat.md` | Strengthened boundary |
+| `gate-answer-app2/prompts/noc-email.md` | Removed file-reading instructions |
+| `gate-answer-app2/prompts/noc-draft.md` | Removed file-reading instructions |
+| `docker-compose.yml` | Ollama env vars |
+| `docs/versions/2.5.0/plan.md` | Finalized with all findings |
+| `docs/versions/2.5.0/deploy-plan.md` | Created deploy SOP |
+
+---
+
 ## 2026-07-02 — Versions 2.1.0 - 2.4.0 (Planning Phase)
 
 ### Roadmap Defined

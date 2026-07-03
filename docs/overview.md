@@ -1,7 +1,7 @@
 # chatbot-gate — Overview
 
-> Current version: **2.0.0** — deployed to production (203.154.16.162).
-> Next: **2.1.0 → 2.4.0** (planned).
+> Current version: **2.5.0** — ready to deploy.
+> Next: **2.6.0+** (TBD).
 > Last updated: 2026-07-02
 
 ## What is it?
@@ -24,18 +24,15 @@ AI-powered NOC and Operation support tool. Uses Groq Free API + Ollama local fal
 
 | App | Status | Description |
 |-----|--------|-------------|
-| `apps/app2/` | **Active** (v2.0.0) | AI NOC/Operation chat, Groq API, MCP Tools, History, Git Sync, Settings |
+| `apps/app2/` | **Active** (v2.5.0) | AI NOC/Operation chat, Groq API, MCP Tools, History, Deploy, Settings |
 | `apps/web1/` | Legacy (v1.10.0) | Old opencode-driven UI |
 
 ## Version Roadmap
 
 | Version | Status | Summary |
 |---------|--------|---------|
+| 2.5.0 | Ready to deploy | Prompt boundary enforcement (9 files), Ollama OOM fix (3 files), deploy SOP |
 | 2.0.0 | Deployed | Free-first LLM router, MCP gateway, SQLite cases, 8-container stack |
-| 2.1.0 | Planned | NOC Intelligence: clarify phase, escalate, handoff, file attach |
-| 2.2.0 | Planned | Operation Intelligence: OpenCode research, multi-source, clarify |
-| 2.3.0 | Planned | Auto KB Generation: daily YAML summaries, git push auto-generated/ |
-| 2.4.0 | Planned | CI/CD: deploy-agent sidecar, one-click deploy, rollback, prompt volume |
 
 ## Project Agents
 

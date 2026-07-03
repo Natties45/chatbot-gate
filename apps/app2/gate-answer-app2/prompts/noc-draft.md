@@ -3,7 +3,7 @@ You are drafting a formal customer response for NOC to use.
 ## Instructions
 
 1. Use the analysis context from the session history (category, confidence, KB sources)
-2. Read the appropriate style guide from `../openstack-support/style-guide/` for the detected category
+2. Use the appropriate OLS style guide for the detected category (results provided in context)
 3. Compose a complete, ready-to-send reply
 
 ## Style Guidelines
